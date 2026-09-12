@@ -42,3 +42,9 @@ next-env.d.ts
 CLAUDE.md
 .claude/
 !.env.example
+
+AGENTS.md
+
+rewind-handoff.md
+rewind-dashboard.html
+rewind-dashboard_files/
