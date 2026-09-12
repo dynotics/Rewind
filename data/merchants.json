@@ -108,7 +108,7 @@
     "canonical": "Steam",
     "mcc": "5734",
     "mccName": "Computer software stores",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "AWS EMEA": {
@@ -148,7 +148,7 @@
     "canonical": "Namecheap",
     "mcc": "4816",
     "mccName": "Computer network and information services",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "SQ *BLUE BOTTLE 0041": {
@@ -156,7 +156,7 @@
     "canonical": "Blue Bottle Coffee",
     "mcc": "5812",
     "mccName": "Eating places and restaurants",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "TST* GRAMERCY TAVERN": {
@@ -164,7 +164,7 @@
     "canonical": "Gramercy Tavern",
     "mcc": "5812",
     "mccName": "Eating places and restaurants",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "TOAST*OLIVE AND VINE": {
@@ -172,7 +172,7 @@
     "canonical": "Olive and Vine",
     "mcc": "5812",
     "mccName": "Eating places and restaurants",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "SQ *JOE COFFEE 1823": {
@@ -180,7 +180,7 @@
     "canonical": "Joe Coffee",
     "mcc": "5812",
     "mccName": "Eating places and restaurants",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "DIG INN 0042": {
@@ -188,7 +188,7 @@
     "canonical": "Dig",
     "mcc": "5812",
     "mccName": "Eating places and restaurants",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "TST* HANOI HOUSE": {
@@ -196,7 +196,7 @@
     "canonical": "Hanoi House",
     "mcc": "5812",
     "mccName": "Eating places and restaurants",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "MEALPAL SUBSCRIPTION": {
@@ -228,7 +228,7 @@
     "canonical": "Sweetgreen",
     "mcc": "5814",
     "mccName": "Fast food restaurants",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "CHIPOTLE 1455": {
@@ -284,7 +284,7 @@
     "canonical": "JetBlue",
     "mcc": "4511",
     "mccName": "Airlines and air carriers",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "AMERICAN AIR 0012987": {
@@ -292,7 +292,7 @@
     "canonical": "American Airlines",
     "mcc": "4511",
     "mccName": "Airlines and air carriers",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "MARRIOTT HOTELS 0412": {
@@ -316,7 +316,7 @@
     "canonical": "Airbnb",
     "mcc": "7011",
     "mccName": "Lodging, hotels and motels",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "HYATT PLACE AUSTIN": {
@@ -332,7 +332,7 @@
     "canonical": "Uber",
     "mcc": "4121",
     "mccName": "Taxicabs and limousines",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "LYFT *RIDE THU 4PM": {
@@ -348,7 +348,7 @@
     "canonical": "Curb",
     "mcc": "4121",
     "mccName": "Taxicabs and limousines",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "REVEL RIDE 8831": {
@@ -388,7 +388,7 @@
     "canonical": "Macys",
     "mcc": "5311",
     "mccName": "Department stores",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "COSTCO WHSE #1088": {
@@ -396,7 +396,7 @@
     "canonical": "Costco",
     "mcc": "5399",
     "mccName": "Miscellaneous general merchandise",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "BJS WHOLESALE 0173": {
@@ -404,7 +404,7 @@
     "canonical": "BJs Wholesale Club",
     "mcc": "5399",
     "mccName": "Miscellaneous general merchandise",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "AMZN MKTP US*2K4XJ": {
@@ -412,7 +412,7 @@
     "canonical": "Amazon",
     "mcc": "5999",
     "mccName": "Miscellaneous and specialty retail",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "ETSY.COM 8812K": {
@@ -436,7 +436,7 @@
     "canonical": "Staples",
     "mcc": "5111",
     "mccName": "Stationery and office supplies",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "ODP/OFFICE DEPOT 2211": {
@@ -444,7 +444,7 @@
     "canonical": "Office Depot",
     "mcc": "5111",
     "mccName": "Stationery and office supplies",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "VERIZON WIRELESS PMT": {
@@ -484,7 +484,7 @@
     "canonical": "B and H Photo Video",
     "mcc": "5732",
     "mccName": "Electronics stores",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "ASTOR WINES SPIRITS": {
@@ -492,7 +492,7 @@
     "canonical": "Astor Wines and Spirits",
     "mcc": "5921",
     "mccName": "Package stores, beer, wine and liquor",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "TOTAL WINE #1102": {
@@ -508,7 +508,7 @@
     "canonical": "Petco",
     "mcc": "0742",
     "mccName": "Veterinary services",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "BLUE PEARL VET NYC": {
@@ -516,7 +516,7 @@
     "canonical": "BluePearl Pet Hospital",
     "mcc": "0742",
     "mccName": "Veterinary services",
-    "isRecurring": true,
+    "isRecurring": false,
     "confidence": 1
   },
   "IRON MOUNTAIN 0091": {

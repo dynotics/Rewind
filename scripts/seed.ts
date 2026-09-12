@@ -399,16 +399,18 @@ function guessMcc(raw: string): MccGuess {
 }
 
 function recurringRaws(txns: Txn[]): Set<string> {
-  const seen = new Map<string, { raw: string; months: Set<string> }>();
+  const seen = new Map<string, { raw: string; months: Set<string>; days: number[] }>();
   for (const txn of txns) {
     const key = `${txn.cardId ?? ""}|${txn.merchant}`;
-    const entry = seen.get(key) ?? { raw: txn.merchant, months: new Set<string>() };
+    const entry = seen.get(key) ?? { raw: txn.merchant, months: new Set<string>(), days: [] };
     entry.months.add(monthKey(txn.postedAt));
+    entry.days.push(new Date(txn.postedAt).getUTCDate());
     seen.set(key, entry);
   }
   const recurring = new Set<string>();
   for (const entry of seen.values()) {
-    if (entry.months.size >= 4) recurring.add(entry.raw);
+    const spread = Math.max(...entry.days) - Math.min(...entry.days);
+    if (entry.months.size >= 4 && spread <= 3) recurring.add(entry.raw);
   }
   return recurring;
 }
