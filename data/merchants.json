@@ -47,6 +47,14 @@
     "isRecurring": false,
     "confidence": 0.8
   },
+  "LINEAR.APP": {
+    "raw": "LINEAR.APP",
+    "canonical": "Linear",
+    "mcc": "7372",
+    "mccName": "Computer programming and data processing",
+    "isRecurring": true,
+    "confidence": 1
+  },
   "FIGMA MONTHLY": {
     "raw": "FIGMA MONTHLY",
     "canonical": "Figma",
@@ -63,14 +71,6 @@
     "isRecurring": true,
     "confidence": 1
   },
-  "VERCEL INC": {
-    "raw": "VERCEL INC",
-    "canonical": "Vercel",
-    "mcc": "7372",
-    "mccName": "Computer programming and data processing",
-    "isRecurring": true,
-    "confidence": 1
-  },
   "SENTRY.IO": {
     "raw": "SENTRY.IO",
     "canonical": "Sentry",
@@ -79,19 +79,19 @@
     "isRecurring": true,
     "confidence": 1
   },
-  "ZOOM.COM 888-799-9666": {
-    "raw": "ZOOM.COM 888-799-9666",
-    "canonical": "Zoom",
+  "ATLASSIAN": {
+    "raw": "ATLASSIAN",
+    "canonical": "Atlassian",
     "mcc": "7372",
     "mccName": "Computer programming and data processing",
     "isRecurring": true,
     "confidence": 1
   },
-  "APPLE.COM/BILL": {
-    "raw": "APPLE.COM/BILL",
-    "canonical": "Apple",
-    "mcc": "5734",
-    "mccName": "Computer software stores",
+  "DATADOG INC": {
+    "raw": "DATADOG INC",
+    "canonical": "Datadog",
+    "mcc": "7372",
+    "mccName": "Computer programming and data processing",
     "isRecurring": true,
     "confidence": 1
   },
@@ -114,30 +114,6 @@
   "AWS EMEA": {
     "raw": "AWS EMEA",
     "canonical": "Amazon Web Services",
-    "mcc": "4816",
-    "mccName": "Computer network and information services",
-    "isRecurring": true,
-    "confidence": 1
-  },
-  "GOOGLE CLOUD 1A2B3C": {
-    "raw": "GOOGLE CLOUD 1A2B3C",
-    "canonical": "Google Cloud",
-    "mcc": "4816",
-    "mccName": "Computer network and information services",
-    "isRecurring": true,
-    "confidence": 1
-  },
-  "DIGITALOCEAN.COM": {
-    "raw": "DIGITALOCEAN.COM",
-    "canonical": "DigitalOcean",
-    "mcc": "4816",
-    "mccName": "Computer network and information services",
-    "isRecurring": true,
-    "confidence": 1
-  },
-  "CLOUDFLARE": {
-    "raw": "CLOUDFLARE",
-    "canonical": "Cloudflare",
     "mcc": "4816",
     "mccName": "Computer network and information services",
     "isRecurring": true,
@@ -359,6 +335,22 @@
     "isRecurring": false,
     "confidence": 1
   },
+  "FACEBK *ADS 4K2J9": {
+    "raw": "FACEBK *ADS 4K2J9",
+    "canonical": "Meta Ads",
+    "mcc": "7311",
+    "mccName": "Advertising services",
+    "isRecurring": true,
+    "confidence": 1
+  },
+  "GOOGLE *ADS8891234": {
+    "raw": "GOOGLE *ADS8891234",
+    "canonical": "Google Ads",
+    "mcc": "7311",
+    "mccName": "Advertising services",
+    "isRecurring": true,
+    "confidence": 1
+  },
   "LINKEDIN ADS 88213": {
     "raw": "LINKEDIN ADS 88213",
     "canonical": "LinkedIn Ads",
@@ -447,22 +439,6 @@
     "isRecurring": false,
     "confidence": 1
   },
-  "VERIZON WIRELESS PMT": {
-    "raw": "VERIZON WIRELESS PMT",
-    "canonical": "Verizon Wireless",
-    "mcc": "4814",
-    "mccName": "Telecommunication services",
-    "isRecurring": true,
-    "confidence": 1
-  },
-  "T-MOBILE*POSTPAID": {
-    "raw": "T-MOBILE*POSTPAID",
-    "canonical": "T-Mobile",
-    "mcc": "4814",
-    "mccName": "Telecommunication services",
-    "isRecurring": true,
-    "confidence": 1
-  },
   "TWILIO INC 8884": {
     "raw": "TWILIO INC 8884",
     "canonical": "Twilio",
@@ -503,25 +479,17 @@
     "isRecurring": false,
     "confidence": 1
   },
-  "PETCO VETERINARY 1188": {
-    "raw": "PETCO VETERINARY 1188",
-    "canonical": "Petco",
-    "mcc": "0742",
-    "mccName": "Veterinary services",
-    "isRecurring": false,
-    "confidence": 1
-  },
-  "BLUE PEARL VET NYC": {
-    "raw": "BLUE PEARL VET NYC",
-    "canonical": "BluePearl Pet Hospital",
-    "mcc": "0742",
-    "mccName": "Veterinary services",
-    "isRecurring": false,
-    "confidence": 1
-  },
   "IRON MOUNTAIN 0091": {
     "raw": "IRON MOUNTAIN 0091",
     "canonical": "Iron Mountain",
+    "mcc": "7399",
+    "mccName": "Business services",
+    "isRecurring": true,
+    "confidence": 1
+  },
+  "ADP PAYROLL FEES": {
+    "raw": "ADP PAYROLL FEES",
+    "canonical": "ADP",
     "mcc": "7399",
     "mccName": "Business services",
     "isRecurring": true,
@@ -572,6 +540,14 @@
     "canonical": "Notion",
     "mcc": "7372",
     "mccName": "Computer programming and data processing",
+    "isRecurring": true,
+    "confidence": 1
+  },
+  "DIGITALOCEAN.COM": {
+    "raw": "DIGITALOCEAN.COM",
+    "canonical": "DigitalOcean",
+    "mcc": "4816",
+    "mccName": "Computer network and information services",
     "isRecurring": true,
     "confidence": 1
   }

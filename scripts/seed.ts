@@ -14,6 +14,21 @@ const YEAR = 2026;
 const ACCOUNT_ID = "30000000-0000-4000-8000-000000000001";
 const GENERATED_ID_PREFIX = "seed-";
 
+const MIN_ONEOFF_CENTS = 400;
+const MIN_ONEOFF_AVG_CENTS = 1500;
+const LEAK_SHARE = 0.08;
+
+const HOLDER = {
+  ethan: "Ethan Parker",
+  maya: "Maya Thompson",
+  daniel: "Daniel Rivera",
+  lucas: "Lucas Bennett",
+  sofia: "Sofia Martin",
+  hannah: "Hannah Brooks",
+  emma: "Emma Walsh",
+  claire: "Claire Mitchell",
+} as const;
+
 type MerchantKind = "recurring" | "oneoff";
 
 type SeedMerchant = {
@@ -30,9 +45,19 @@ type SeedMonth = { year: number; month: number; days: number };
 
 type Row = Omit<Txn, "id">;
 
-type Recurrence = { merchant: SeedMerchant; day: number; baseCents: number };
+type Recurrence = {
+  merchant: SeedMerchant;
+  day: number;
+  baseCents: number;
+  fixed: boolean;
+};
 
-type MonthRows = { recurring: Row[]; oneoff: Row[] };
+type CardPlan = {
+  card: SeedCard;
+  desired: number[];
+  scale: number;
+  recurrences: Recurrence[];
+};
 
 type MccGuess = { mcc: string; mccName: string };
 
@@ -76,6 +101,14 @@ const SAAS_MERCHANT: SeedMerchant = {
   kind: "recurring",
 };
 
+const CLOUD_MERCHANT: SeedMerchant = {
+  raw: "DIGITALOCEAN.COM",
+  canonical: "DigitalOcean",
+  mcc: "4816",
+  mccName: "Computer network and information services",
+  kind: "recurring",
+};
+
 const MERCHANTS: SeedMerchant[] = [
   { raw: "LINEAR.APP", canonical: "Linear", mcc: "7372", mccName: "Computer programming and data processing", kind: "recurring" },
   { raw: "FIGMA MONTHLY", canonical: "Figma", mcc: "7372", mccName: "Computer programming and data processing", kind: "recurring" },
@@ -84,12 +117,16 @@ const MERCHANTS: SeedMerchant[] = [
   { raw: "VERCEL INC", canonical: "Vercel", mcc: "7372", mccName: "Computer programming and data processing", kind: "recurring" },
   { raw: "SENTRY.IO", canonical: "Sentry", mcc: "7372", mccName: "Computer programming and data processing", kind: "recurring" },
   { raw: "ZOOM.COM 888-799-9666", canonical: "Zoom", mcc: "7372", mccName: "Computer programming and data processing", kind: "recurring" },
+  { raw: "ATLASSIAN", canonical: "Atlassian", mcc: "7372", mccName: "Computer programming and data processing", kind: "recurring" },
+  { raw: "HUBSPOT INC", canonical: "HubSpot", mcc: "7372", mccName: "Computer programming and data processing", kind: "recurring" },
+  { raw: "1PASSWORD", canonical: "1Password", mcc: "7372", mccName: "Computer programming and data processing", kind: "recurring" },
+  { raw: "DROPBOX*8K2LM1", canonical: "Dropbox", mcc: "7372", mccName: "Computer programming and data processing", kind: "recurring" },
+  { raw: "DATADOG INC", canonical: "Datadog", mcc: "7372", mccName: "Computer programming and data processing", kind: "recurring" },
   { raw: "APPLE.COM/BILL", canonical: "Apple", mcc: "5734", mccName: "Computer software stores", kind: "recurring" },
   { raw: "MICROSOFT*STORE 4418", canonical: "Microsoft", mcc: "5734", mccName: "Computer software stores", kind: "oneoff" },
   { raw: "STEAM PURCHASE 9921", canonical: "Steam", mcc: "5734", mccName: "Computer software stores", kind: "oneoff" },
   { raw: "AWS EMEA", canonical: "Amazon Web Services", mcc: "4816", mccName: "Computer network and information services", kind: "recurring" },
   { raw: "GOOGLE CLOUD 1A2B3C", canonical: "Google Cloud", mcc: "4816", mccName: "Computer network and information services", kind: "recurring" },
-  { raw: "DIGITALOCEAN.COM", canonical: "DigitalOcean", mcc: "4816", mccName: "Computer network and information services", kind: "recurring" },
   { raw: "CLOUDFLARE", canonical: "Cloudflare", mcc: "4816", mccName: "Computer network and information services", kind: "recurring" },
   { raw: "NAMECHEAP.COM*HOSTING", canonical: "Namecheap", mcc: "4816", mccName: "Computer network and information services", kind: "oneoff" },
   { raw: "SQ *BLUE BOTTLE 0041", canonical: "Blue Bottle Coffee", mcc: "5812", mccName: "Eating places and restaurants", kind: "oneoff" },
@@ -150,6 +187,7 @@ const MERCHANTS: SeedMerchant[] = [
   GAMBLING_MERCHANT,
   PERSONAL_MERCHANT,
   SAAS_MERCHANT,
+  CLOUD_MERCHANT,
 ];
 
 const RESERVED_RAWS = new Set([
@@ -158,18 +196,35 @@ const RESERVED_RAWS = new Set([
   GAMBLING_MERCHANT.raw,
   PERSONAL_MERCHANT.raw,
   SAAS_MERCHANT.raw,
+  CLOUD_MERCHANT.raw,
 ]);
+
+// Gambling, liquor and vet only ever appear where main() plants them.
+const PLANTED_ONLY_MCCS = new Set(["7995", "5921", "0742"]);
+
+// Maya's allowlist leakage is limited to software and rideshare merchants.
+const LEAK_MCCS = new Set(["7372", "5734", "4121"]);
 
 const ONEOFF_POOL = MERCHANTS.filter(
   (merchant) =>
     merchant.kind === "oneoff" &&
-    merchant.mcc !== "7995" &&
+    !PLANTED_ONLY_MCCS.has(merchant.mcc) &&
     !RESERVED_RAWS.has(merchant.raw),
 );
 
 const RECURRING_POOL = MERCHANTS.filter(
   (merchant) => merchant.kind === "recurring" && !RESERVED_RAWS.has(merchant.raw),
 );
+
+const LEAK_POOL = ONEOFF_POOL.filter((merchant) => LEAK_MCCS.has(merchant.mcc));
+
+const LIQUOR_POOL = MERCHANTS.filter((merchant) => merchant.mcc === "5921");
+
+// Recurring merchants deliberately billed on two cards, at a fixed amount on both.
+const PLANTED_RECURRING: { merchant: SeedMerchant; holders: string[]; cents: number }[] = [
+  { merchant: SAAS_MERCHANT, holders: [HOLDER.daniel, HOLDER.sofia], cents: 9900 },
+  { merchant: CLOUD_MERCHANT, holders: [HOLDER.hannah, HOLDER.emma], cents: 4800 },
+];
 
 const MONTHS: SeedMonth[] = [3, 4, 5, 6, 7, 8].map((month) => ({
   year: YEAR,
@@ -250,6 +305,15 @@ function pick<T>(items: T[], rand: () => number): T {
   return items[Math.floor(rand() * items.length)];
 }
 
+function shuffle<T>(items: T[], rand: () => number): T[] {
+  const copy = [...items];
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(rand() * (index + 1));
+    [copy[index], copy[swap]] = [copy[swap], copy[index]];
+  }
+  return copy;
+}
+
 function intBetween(rand: () => number, min: number, max: number): number {
   return min + Math.floor(rand() * (max - min + 1));
 }
@@ -257,6 +321,10 @@ function intBetween(rand: () => number, min: number, max: number): number {
 function skewedCents(rand: () => number, min: number, max: number): number {
   const unit = rand();
   return min + Math.round(unit * unit * unit * (max - min));
+}
+
+function sum(values: number[]): number {
+  return values.reduce((acc, value) => acc + value, 0);
 }
 
 function hasUser(card: Card): card is SeedCard {
@@ -276,33 +344,99 @@ function isInsidePolicy(card: SeedCard, merchant: SeedMerchant): boolean {
 
 function insidePool(card: SeedCard, pool: SeedMerchant[]): SeedMerchant[] {
   const inside = pool.filter((merchant) => isInsidePolicy(card, merchant));
-  return inside.length > 0 ? inside : pool;
-}
-
-function pickForCard(
-  card: SeedCard,
-  pool: SeedMerchant[],
-  rand: () => number,
-): SeedMerchant {
-  if (!isRestricted(card)) return pick(pool, rand);
-  const outside = pool.filter((merchant) => !isInsidePolicy(card, merchant));
-  const preferred = rand() < 0.9 ? insidePool(card, pool) : outside;
-  return pick(preferred.length > 0 ? preferred : pool, rand);
-}
-
-function pickRecurrences(card: SeedCard, rand: () => number): Recurrence[] {
-  const target = intBetween(rand, 2, 4);
-  const chosen: Recurrence[] = [];
-  for (let attempt = 0; attempt < 40 && chosen.length < target; attempt += 1) {
-    const merchant = isRestricted(card)
-      ? pick(insidePool(card, RECURRING_POOL), rand)
-      : pick(RECURRING_POOL, rand);
-    const day = intBetween(rand, 1, 28);
-    const baseCents = skewedCents(rand, 900, 45000);
-    if (chosen.some((entry) => entry.merchant.raw === merchant.raw)) continue;
-    chosen.push({ merchant, day, baseCents });
+  if (inside.length === 0) {
+    throw new Error(`no seed merchants satisfy the allowlist on ${card.name}`);
   }
-  return chosen;
+  return inside;
+}
+
+function cardLimit(card: SeedCard): number {
+  if (card.limitCents === null) {
+    throw new Error(`card ${card.name} has no limit to scale spend against`);
+  }
+  return card.limitCents;
+}
+
+// Per-month totals each card should land on, before real rows and floors are applied.
+function desiredTotals(card: SeedCard, rand: () => number): number[] {
+  const limit = cardLimit(card);
+  switch (card.holderName) {
+    case HOLDER.claire:
+      return MONTHS.map(() => Math.round(limit * (0.12 + rand() * 0.08)));
+    case HOLDER.emma:
+      return MONTHS.map((_, index) =>
+        Math.round(limit * (0.45 + index * 0.1 + (rand() - 0.5) * 0.03)),
+      );
+    case HOLDER.daniel:
+      return MONTHS.map(() => intBetween(rand, 210000, 260000));
+  }
+  switch (card.limitType) {
+    case "monthly":
+      return MONTHS.map(() => Math.round(limit * (0.45 + rand() * 0.4)));
+    case "daily":
+      return MONTHS.map(() => Math.round(limit * (40 + rand() * 30)));
+    case "fixed": {
+      const total = limit * (0.6 + rand() * 0.2);
+      const weights = MONTHS.map(() => 0.7 + rand() * 0.6);
+      const weightSum = sum(weights);
+      return weights.map((weight) => Math.round((total * weight) / weightSum));
+    }
+    default:
+      throw new Error(`no seed target for ${card.name} with limit type ${card.limitType}`);
+  }
+}
+
+function recurringBaseCents(scale: number, rand: () => number): number {
+  return skewedCents(
+    rand,
+    Math.max(900, Math.round(scale * 0.005)),
+    Math.max(2500, Math.round(scale * 0.06)),
+  );
+}
+
+// Every card gets 2 to 4 recurring merchants with no merchant shared between cards,
+// apart from the planted duplicates. Allowlisted cards pick first so their small
+// inside pool is not consumed by unrestricted cards.
+function assignRecurrences(
+  plans: Omit<CardPlan, "recurrences">[],
+  rand: () => number,
+): Map<string, Recurrence[]> {
+  const taken = new Set<string>();
+  const ordered = [
+    ...plans.filter((plan) => isRestricted(plan.card)),
+    ...plans.filter((plan) => !isRestricted(plan.card)),
+  ];
+  const assigned = new Map<string, Recurrence[]>();
+  for (const { card, scale } of ordered) {
+    const planted = PLANTED_RECURRING.filter((entry) =>
+      entry.holders.includes(card.holderName ?? ""),
+    );
+    const wanted = intBetween(rand, 2, 4) - planted.length;
+    const candidates = RECURRING_POOL.filter(
+      (merchant) =>
+        !taken.has(merchant.raw) && (!isRestricted(card) || isInsidePolicy(card, merchant)),
+    );
+    const picks = shuffle(candidates, rand).slice(0, Math.max(0, wanted));
+    if (picks.length + planted.length < 2) {
+      throw new Error(`recurring merchant pool exhausted before ${card.name}`);
+    }
+    for (const merchant of picks) taken.add(merchant.raw);
+    assigned.set(card.id, [
+      ...planted.map((entry) => ({
+        merchant: entry.merchant,
+        day: intBetween(rand, 1, 28),
+        baseCents: entry.cents,
+        fixed: true,
+      })),
+      ...picks.map((merchant) => ({
+        merchant,
+        day: intBetween(rand, 1, 28),
+        baseCents: recurringBaseCents(scale, rand),
+        fixed: false,
+      })),
+    ]);
+  }
+  return assigned;
 }
 
 function buildRow(
@@ -333,55 +467,123 @@ function buildRow(
   };
 }
 
-function generateMonthlyRows(card: SeedCard, rand: () => number): MonthRows[] {
-  const recurrences = pickRecurrences(card, rand);
-  return MONTHS.map((month) => {
-    const recurring = recurrences.map((entry) =>
+function draftRow(
+  card: SeedCard,
+  merchant: SeedMerchant,
+  month: SeedMonth,
+  rand: () => number,
+): Row {
+  return buildRow(
+    card,
+    merchant,
+    skewedCents(rand, 400, 90000),
+    month,
+    intBetween(rand, 1, month.days),
+    rand,
+  );
+}
+
+function recurringRows(plan: CardPlan, rand: () => number): Row[][] {
+  return MONTHS.map((month) =>
+    plan.recurrences.map((entry) =>
       buildRow(
-        card,
+        plan.card,
         entry.merchant,
-        Math.round(entry.baseCents * (0.95 + rand() * 0.1)),
+        entry.fixed ? entry.baseCents : Math.round(entry.baseCents * (0.95 + rand() * 0.1)),
         month,
         entry.day,
         rand,
       ),
+    ),
+  );
+}
+
+// One-off drafts carry provisional amounts; fitOneoffs rescales them to the month's budget.
+function draftOneoffs(plan: CardPlan, rand: () => number): Row[][] {
+  if (isRestricted(plan.card)) return draftRestrictedOneoffs(plan, rand);
+  const factor = Math.max(1, Math.round(plan.scale / 800000));
+  return MONTHS.map((month) => {
+    const count = intBetween(rand, 8, 25) * factor;
+    return Array.from({ length: count }, () =>
+      draftRow(plan.card, pick(ONEOFF_POOL, rand), month, rand),
     );
-    const oneoff: Row[] = [];
-    const oneoffCount = intBetween(rand, 8, 25);
-    for (let index = 0; index < oneoffCount; index += 1) {
-      oneoff.push(
-        buildRow(
-          card,
-          pickForCard(card, ONEOFF_POOL, rand),
-          skewedCents(rand, 400, 90000),
-          month,
-          intBetween(rand, 1, month.days),
-          rand,
-        ),
-      );
-    }
-    return { recurring, oneoff };
   });
+}
+
+// Allowlisted cards: a fixed share of all charges (recurring included) leak to
+// software or rideshare merchants; everything else stays inside the allowlist.
+function draftRestrictedOneoffs(plan: CardPlan, rand: () => number): Row[][] {
+  const { card } = plan;
+  const leakCount = intBetween(rand, 4, 6);
+  const totalCharges = Math.round(leakCount / LEAK_SHARE);
+  const insideCount = Math.max(
+    0,
+    totalCharges - leakCount - plan.recurrences.length * MONTHS.length,
+  );
+  const perMonth = MONTHS.map(() => Math.floor(insideCount / MONTHS.length));
+  const extra = shuffle(MONTHS.map((_, index) => index), rand);
+  for (const index of extra.slice(0, insideCount % MONTHS.length)) perMonth[index] += 1;
+
+  const inside = insidePool(card, ONEOFF_POOL);
+  const months = MONTHS.map((month, index) =>
+    Array.from({ length: perMonth[index] }, () => draftRow(card, pick(inside, rand), month, rand)),
+  );
+  for (let leak = 0; leak < leakCount; leak += 1) {
+    const index = intBetween(rand, 0, MONTHS.length - 1);
+    months[index].push(draftRow(card, pick(LEAK_POOL, rand), MONTHS[index], rand));
+  }
+  return months;
+}
+
+// Final per-month totals: never below what is already booked, and for a ramping
+// card strictly above the previous month.
+function resolveTotals(plan: CardPlan, floors: number[]): number[] {
+  const rising = plan.card.holderName === HOLDER.emma;
+  const step = Math.round(cardLimit(plan.card) * 0.01);
+  const totals: number[] = [];
+  for (let index = 0; index < MONTHS.length; index += 1) {
+    let total = Math.max(plan.desired[index], floors[index]);
+    if (rising && index > 0) total = Math.max(total, totals[index - 1] + step);
+    totals.push(total);
+  }
+  return totals;
 }
 
 function fitToTotal(rows: Row[], targetCents: number): Row[] {
   const total = rows.reduce((sum, row) => sum + row.amountCents, 0);
   const scaled = rows.map((row) =>
-    Math.max(400, Math.round((row.amountCents * targetCents) / total)),
+    Math.max(MIN_ONEOFF_CENTS, Math.round((row.amountCents * targetCents) / total)),
   );
   const order = [...scaled.keys()].sort((left, right) => scaled[right] - scaled[left]);
   let remainder = targetCents - scaled.reduce((sum, value) => sum + value, 0);
   for (const index of order) {
     if (remainder === 0) break;
-    const step = remainder > 0 ? remainder : Math.max(remainder, 400 - scaled[index]);
+    const step =
+      remainder > 0 ? remainder : Math.max(remainder, MIN_ONEOFF_CENTS - scaled[index]);
     scaled[index] += step;
     remainder -= step;
   }
   return rows.map((row, index) => ({ ...row, amountCents: scaled[index] }));
 }
 
+// When a month's budget is too small for the drafted rows (a real row already
+// fills the month), keep fewer one-offs rather than crushing every amount to $4.
+function fitOneoffs(rows: Row[], budgetCents: number): Row[] {
+  if (rows.length === 0) return [];
+  const keep = Math.max(
+    1,
+    Math.min(rows.length, Math.floor(budgetCents / MIN_ONEOFF_AVG_CENTS)),
+  );
+  const kept = rows.slice(0, keep);
+  return fitToTotal(kept, Math.max(budgetCents, keep * MIN_ONEOFF_CENTS));
+}
+
 function monthKey(postedAt: string): string {
   return postedAt.slice(0, 7);
+}
+
+function seedMonthKey(month: SeedMonth): string {
+  return `${month.year}-${String(month.month).padStart(2, "0")}`;
 }
 
 function canonicalizeRaw(raw: string): string {
@@ -426,100 +628,71 @@ function main(): void {
     .filter((txn) => !txn.id.startsWith(GENERATED_ID_PREFIX));
 
   const seedCards = cards.filter(hasUser);
-  const budgetCard = seedCards[0];
-  const others = seedCards.slice(1);
-  const bigTicketCard = others.reduce(
-    (best, card) => ((card.limitCents ?? 0) > (best.limitCents ?? 0) ? card : best),
-    others[0],
-  );
-  const gamblingCards = [others[2 % others.length], others[others.length - 1]];
-  const personalCard = others[others.length - 2];
-  const saasCards = [others[1 % others.length], others[3 % others.length]];
+  const cardFor = (holder: string): SeedCard => {
+    const card = seedCards.find((entry) => entry.holderName === holder);
+    if (card === undefined) throw new Error(`no card held by ${holder} in data/cards.json`);
+    return card;
+  };
+  const bigTicketCard = cardFor(HOLDER.hannah);
+  const gamblingCards = [cardFor(HOLDER.lucas), cardFor(HOLDER.lucas), cardFor(HOLDER.claire)];
+  const personalCard = cardFor(HOLDER.ethan);
+  const liquorCard = cardFor(HOLDER.sofia);
 
-  const realBudgetByMonth = new Map<string, number>();
-  for (const txn of real.filter((txn) => txn.cardId === budgetCard.id)) {
-    const key = monthKey(txn.postedAt);
-    realBudgetByMonth.set(key, (realBudgetByMonth.get(key) ?? 0) + txn.amountCents);
+  // Amounts already on each card-month before one-offs are fitted.
+  const booked = new Map<string, number>();
+  const book = (cardId: string, key: string, cents: number): void => {
+    const slot = `${cardId}|${key}`;
+    booked.set(slot, (booked.get(slot) ?? 0) + cents);
+  };
+  for (const txn of real) {
+    if (txn.cardId !== null) book(txn.cardId, monthKey(txn.postedAt), txn.amountCents);
   }
+
+  const drafts = seedCards.map((card) => {
+    const desired = desiredTotals(card, rand);
+    return { card, desired, scale: Math.round(sum(desired) / desired.length) };
+  });
+  const recurrences = assignRecurrences(drafts, rand);
+  const plans: CardPlan[] = drafts.map((draft) => ({
+    ...draft,
+    recurrences: recurrences.get(draft.card.id) ?? [],
+  }));
 
   const rows: Row[] = [];
-  for (const card of seedCards) {
-    const monthlyRows = generateMonthlyRows(card, rand);
-    if (card.id !== budgetCard.id) {
-      for (const monthRows of monthlyRows) {
-        rows.push(...monthRows.recurring, ...monthRows.oneoff);
-      }
-      continue;
-    }
-    monthlyRows.forEach((monthRows, index) => {
-      const month = MONTHS[index];
-      const key = `${month.year}-${String(month.month).padStart(2, "0")}`;
-      const booked =
-        (realBudgetByMonth.get(key) ?? 0) +
-        monthRows.recurring.reduce((sum, row) => sum + row.amountCents, 0);
-      const target = intBetween(rand, 210000, 260000) - booked;
+  const plant = (card: SeedCard, merchant: SeedMerchant, cents: number, month: SeedMonth): void => {
+    const row = buildRow(card, merchant, cents, month, intBetween(rand, 1, month.days), rand);
+    book(card.id, seedMonthKey(month), cents);
+    rows.push(row);
+  };
+
+  plant(bigTicketCard, CONFERENCE_MERCHANT, 185000, MONTHS[intBetween(rand, 0, 2)]);
+  plant(bigTicketCard, ELECTRONICS_MERCHANT, 240000, MONTHS[intBetween(rand, 3, 5)]);
+  for (const card of gamblingCards) {
+    plant(card, GAMBLING_MERCHANT, intBetween(rand, 5000, 20000), pick(MONTHS, rand));
+  }
+  plant(personalCard, PERSONAL_MERCHANT, intBetween(rand, 17500, 18500), pick(MONTHS, rand));
+  for (let index = 0; index < 2; index += 1) {
+    plant(liquorCard, pick(LIQUOR_POOL, rand), intBetween(rand, 3500, 12000), pick(MONTHS, rand));
+  }
+
+  for (const plan of plans) {
+    const recurring = recurringRows(plan, rand);
+    const oneoffs = draftOneoffs(plan, rand);
+    const bookedByMonth = MONTHS.map(
+      (month, index) =>
+        (booked.get(`${plan.card.id}|${seedMonthKey(month)}`) ?? 0) +
+        sum(recurring[index].map((row) => row.amountCents)),
+    );
+    const floors = bookedByMonth.map(
+      (cents, index) => cents + Math.min(oneoffs[index].length, 2) * MIN_ONEOFF_AVG_CENTS,
+    );
+    const totals = resolveTotals(plan, floors);
+    MONTHS.forEach((_, index) => {
       rows.push(
-        ...monthRows.recurring,
-        ...fitToTotal(monthRows.oneoff, Math.max(target, monthRows.oneoff.length * 400)),
+        ...recurring[index],
+        ...fitOneoffs(oneoffs[index], totals[index] - bookedByMonth[index]),
       );
     });
-  }
-
-  const conferenceMonth = MONTHS[intBetween(rand, 0, 2)];
-  rows.push(
-    buildRow(
-      bigTicketCard,
-      CONFERENCE_MERCHANT,
-      185000,
-      conferenceMonth,
-      intBetween(rand, 1, conferenceMonth.days),
-      rand,
-    ),
-  );
-
-  const electronicsMonth = MONTHS[intBetween(rand, 3, 5)];
-  rows.push(
-    buildRow(
-      bigTicketCard,
-      ELECTRONICS_MERCHANT,
-      240000,
-      electronicsMonth,
-      intBetween(rand, 1, electronicsMonth.days),
-      rand,
-    ),
-  );
-
-  for (const card of [gamblingCards[0], gamblingCards[0], gamblingCards[1]]) {
-    const month = pick(MONTHS, rand);
-    rows.push(
-      buildRow(
-        card,
-        GAMBLING_MERCHANT,
-        intBetween(rand, 5000, 20000),
-        month,
-        intBetween(rand, 1, month.days),
-        rand,
-      ),
-    );
-  }
-
-  const personalMonth = pick(MONTHS, rand);
-  rows.push(
-    buildRow(
-      personalCard,
-      PERSONAL_MERCHANT,
-      intBetween(rand, 17500, 18500),
-      personalMonth,
-      intBetween(rand, 1, personalMonth.days),
-      rand,
-    ),
-  );
-
-  for (const card of saasCards) {
-    const day = intBetween(rand, 1, 28);
-    for (const month of MONTHS) {
-      rows.push(buildRow(card, SAAS_MERCHANT, 9900, month, day, rand));
-    }
   }
 
   const generated: Txn[] = rows

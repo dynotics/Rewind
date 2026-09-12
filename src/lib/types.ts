@@ -74,3 +74,23 @@ export const VerdictSchema = z.object({
 });
 
 export type Verdict = z.infer<typeof VerdictSchema>;
+
+export const FindingSchema = z.object({
+  id: z.string(),
+  kind: z.enum([
+    "duplicate_subscription",
+    "control_leakage",
+    "risk_category",
+    "no_limit",
+    "limit_too_high",
+    "spend_acceleration",
+  ]),
+  title: z.string(),
+  detail: z.string(),
+  cardId: z.string().nullable(),
+  evidenceTxnIds: z.array(z.string()),
+  impactCents: z.number(),
+  suggested: PolicySchema,
+});
+
+export type Finding = z.infer<typeof FindingSchema>;
