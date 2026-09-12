@@ -1,0 +1,114 @@
+[
+  {
+    "id": "20000000-0000-4000-8000-000000000001",
+    "name": "Ethan Parker",
+    "last4": "0042",
+    "userId": "10000000-0000-4000-8000-000000000001",
+    "holderName": "Ethan Parker",
+    "limitCents": 500000,
+    "limitType": "monthly",
+    "blockedMccs": [
+      "0742"
+    ],
+    "blockedMerchants": [
+      "Petco"
+    ],
+    "allowedMccs": [],
+    "allowedMerchants": []
+  },
+  {
+    "id": "20000000-0000-4000-8000-000000000002",
+    "name": "Maya Thompson",
+    "last4": "1846",
+    "userId": "10000000-0000-4000-8000-000000000002",
+    "holderName": "Maya Thompson",
+    "limitCents": 100000,
+    "limitType": "monthly",
+    "blockedMccs": [],
+    "blockedMerchants": [],
+    "allowedMccs": [
+      "5812"
+    ],
+    "allowedMerchants": [
+      "Sweetgreen"
+    ]
+  },
+  {
+    "id": "20000000-0000-4000-8000-000000000003",
+    "name": "Daniel Rivera",
+    "last4": "7291",
+    "userId": "10000000-0000-4000-8000-000000000003",
+    "holderName": "Daniel Rivera",
+    "limitCents": 250000,
+    "limitType": "monthly",
+    "blockedMccs": [],
+    "blockedMerchants": [],
+    "allowedMccs": [],
+    "allowedMerchants": []
+  },
+  {
+    "id": "20000000-0000-4000-8000-000000000004",
+    "name": "Lucas Bennett",
+    "last4": "6603",
+    "userId": "10000000-0000-4000-8000-000000000004",
+    "holderName": "Lucas Bennett",
+    "limitCents": 75000,
+    "limitType": "daily",
+    "blockedMccs": [],
+    "blockedMerchants": [],
+    "allowedMccs": [],
+    "allowedMerchants": []
+  },
+  {
+    "id": "20000000-0000-4000-8000-000000000005",
+    "name": "Sofia Martin Physical Card",
+    "last4": "3150",
+    "userId": "10000000-0000-4000-8000-000000000006",
+    "holderName": "Sofia Martin",
+    "limitCents": 200000,
+    "limitType": "monthly",
+    "blockedMccs": [],
+    "blockedMerchants": [],
+    "allowedMccs": [],
+    "allowedMerchants": []
+  },
+  {
+    "id": "20000000-0000-4000-8000-000000000006",
+    "name": "Hannah Brooks",
+    "last4": "9027",
+    "userId": "10000000-0000-4000-8000-000000000007",
+    "holderName": "Hannah Brooks",
+    "limitCents": 2500000,
+    "limitType": "monthly",
+    "blockedMccs": [],
+    "blockedMerchants": [],
+    "allowedMccs": [],
+    "allowedMerchants": []
+  },
+  {
+    "id": "20000000-0000-4000-8000-000000000007",
+    "name": "Emma Walsh Virtual Card",
+    "last4": "1184",
+    "userId": "10000000-0000-4000-8000-000000000008",
+    "holderName": "Emma Walsh",
+    "limitCents": 150000,
+    "limitType": "monthly",
+    "blockedMccs": [],
+    "blockedMerchants": [],
+    "allowedMccs": [],
+    "allowedMerchants": []
+  },
+  {
+    "id": "20000000-0000-4000-8000-000000000008",
+    "name": "Claire Mitchell",
+    "last4": "7732",
+    "userId": "10000000-0000-4000-8000-000000000009",
+    "holderName": "Claire Mitchell",
+    "limitCents": 500000,
+    "limitType": "fixed",
+    "blockedMccs": [],
+    "blockedMerchants": [],
+    "allowedMccs": [],
+    "allowedMerchants": []
+  }
+]

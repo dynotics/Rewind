@@ -6,11 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "sync": "tsx scripts/sync.ts",
+    "seed": "tsx scripts/seed.ts",
+    "enrich": "tsx scripts/enrich.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.125.0",
     "@tavily/core": "^0.7.11",
+    "dotenv": "^17.4.2",
     "next": "16.3.5",
     "react": "19.2.8",
     "react-dom": "19.2.8",
