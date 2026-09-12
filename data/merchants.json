@@ -47,17 +47,17 @@
     "isRecurring": false,
     "confidence": 0.8
   },
-  "LINEAR.APP": {
-    "raw": "LINEAR.APP",
-    "canonical": "Linear",
+  "FIGMA MONTHLY": {
+    "raw": "FIGMA MONTHLY",
+    "canonical": "Figma",
     "mcc": "7372",
     "mccName": "Computer programming and data processing",
     "isRecurring": true,
     "confidence": 1
   },
-  "FIGMA MONTHLY": {
-    "raw": "FIGMA MONTHLY",
-    "canonical": "Figma",
+  "SLACK T0288FJ21": {
+    "raw": "SLACK T0288FJ21",
+    "canonical": "Slack",
     "mcc": "7372",
     "mccName": "Computer programming and data processing",
     "isRecurring": true,
@@ -71,6 +71,14 @@
     "isRecurring": true,
     "confidence": 1
   },
+  "VERCEL INC": {
+    "raw": "VERCEL INC",
+    "canonical": "Vercel",
+    "mcc": "7372",
+    "mccName": "Computer programming and data processing",
+    "isRecurring": true,
+    "confidence": 1
+  },
   "SENTRY.IO": {
     "raw": "SENTRY.IO",
     "canonical": "Sentry",
@@ -79,9 +87,33 @@
     "isRecurring": true,
     "confidence": 1
   },
-  "ATLASSIAN": {
-    "raw": "ATLASSIAN",
-    "canonical": "Atlassian",
+  "ZOOM.COM 888-799-9666": {
+    "raw": "ZOOM.COM 888-799-9666",
+    "canonical": "Zoom",
+    "mcc": "7372",
+    "mccName": "Computer programming and data processing",
+    "isRecurring": true,
+    "confidence": 1
+  },
+  "HUBSPOT INC": {
+    "raw": "HUBSPOT INC",
+    "canonical": "HubSpot",
+    "mcc": "7372",
+    "mccName": "Computer programming and data processing",
+    "isRecurring": true,
+    "confidence": 1
+  },
+  "1PASSWORD": {
+    "raw": "1PASSWORD",
+    "canonical": "1Password",
+    "mcc": "7372",
+    "mccName": "Computer programming and data processing",
+    "isRecurring": true,
+    "confidence": 1
+  },
+  "DROPBOX*8K2LM1": {
+    "raw": "DROPBOX*8K2LM1",
+    "canonical": "Dropbox",
     "mcc": "7372",
     "mccName": "Computer programming and data processing",
     "isRecurring": true,
@@ -92,6 +124,14 @@
     "canonical": "Datadog",
     "mcc": "7372",
     "mccName": "Computer programming and data processing",
+    "isRecurring": true,
+    "confidence": 1
+  },
+  "APPLE.COM/BILL": {
+    "raw": "APPLE.COM/BILL",
+    "canonical": "Apple",
+    "mcc": "5734",
+    "mccName": "Computer software stores",
     "isRecurring": true,
     "confidence": 1
   },
@@ -114,6 +154,14 @@
   "AWS EMEA": {
     "raw": "AWS EMEA",
     "canonical": "Amazon Web Services",
+    "mcc": "4816",
+    "mccName": "Computer network and information services",
+    "isRecurring": true,
+    "confidence": 1
+  },
+  "CLOUDFLARE": {
+    "raw": "CLOUDFLARE",
+    "canonical": "Cloudflare",
     "mcc": "4816",
     "mccName": "Computer network and information services",
     "isRecurring": true,
@@ -343,14 +391,6 @@
     "isRecurring": true,
     "confidence": 1
   },
-  "GOOGLE *ADS8891234": {
-    "raw": "GOOGLE *ADS8891234",
-    "canonical": "Google Ads",
-    "mcc": "7311",
-    "mccName": "Advertising services",
-    "isRecurring": true,
-    "confidence": 1
-  },
   "LINKEDIN ADS 88213": {
     "raw": "LINKEDIN ADS 88213",
     "canonical": "LinkedIn Ads",
@@ -439,9 +479,17 @@
     "isRecurring": false,
     "confidence": 1
   },
-  "TWILIO INC 8884": {
-    "raw": "TWILIO INC 8884",
-    "canonical": "Twilio",
+  "W.B. MASON CO INC": {
+    "raw": "W.B. MASON CO INC",
+    "canonical": "W.B. Mason",
+    "mcc": "5111",
+    "mccName": "Stationery and office supplies",
+    "isRecurring": true,
+    "confidence": 1
+  },
+  "VERIZON WIRELESS PMT": {
+    "raw": "VERIZON WIRELESS PMT",
+    "canonical": "Verizon Wireless",
     "mcc": "4814",
     "mccName": "Telecommunication services",
     "isRecurring": true,
@@ -469,30 +517,6 @@
     "mcc": "5921",
     "mccName": "Package stores, beer, wine and liquor",
     "isRecurring": false,
-    "confidence": 1
-  },
-  "TOTAL WINE #1102": {
-    "raw": "TOTAL WINE #1102",
-    "canonical": "Total Wine and More",
-    "mcc": "5921",
-    "mccName": "Package stores, beer, wine and liquor",
-    "isRecurring": false,
-    "confidence": 1
-  },
-  "IRON MOUNTAIN 0091": {
-    "raw": "IRON MOUNTAIN 0091",
-    "canonical": "Iron Mountain",
-    "mcc": "7399",
-    "mccName": "Business services",
-    "isRecurring": true,
-    "confidence": 1
-  },
-  "ADP PAYROLL FEES": {
-    "raw": "ADP PAYROLL FEES",
-    "canonical": "ADP",
-    "mcc": "7399",
-    "mccName": "Business services",
-    "isRecurring": true,
     "confidence": 1
   },
   "LEGALZOOM.COM INC": {

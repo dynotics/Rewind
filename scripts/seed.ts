@@ -16,7 +16,20 @@ const GENERATED_ID_PREFIX = "seed-";
 
 const MIN_ONEOFF_CENTS = 400;
 const MIN_ONEOFF_AVG_CENTS = 1500;
+
+// Allowlisted cards leak this many charges summing to this much, and the leaks
+// stay a fixed share of the card's charge count.
+const LEAK_COUNT = 5;
+const LEAK_TOTAL_CENTS: [number, number] = [90000, 130000];
 const LEAK_SHARE = 0.08;
+
+// Daily-limit cards: charges per month and the month's total spend.
+const DAILY_CHARGES: [number, number] = [6, 10];
+const DAILY_MONTH_CENTS: [number, number] = [200000, 450000];
+
+// Planted demo charges, sized so the findings they trigger carry real weight.
+const GAMBLING_CENTS: [number, number] = [40000, 90000];
+const LIQUOR_CENTS: [number, number] = [30000, 50000];
 
 const HOLDER = {
   ethan: "Ethan Parker",
@@ -60,6 +73,10 @@ type CardPlan = {
 };
 
 type MccGuess = { mcc: string; mccName: string };
+
+// What a card-month already carries before one-offs are fitted: real rows and
+// planted charges, with the days they occupy.
+type Slot = { cents: number; count: number; days: Set<number> };
 
 const CONFERENCE_MERCHANT: SeedMerchant = {
   raw: "EVENTBRITE*SCALECONF26",
@@ -277,6 +294,11 @@ function nyOffsetMs(instant: number): number {
   return local - instant;
 }
 
+function nyDay(iso: string): number {
+  const part = NY_PARTS.formatToParts(Date.parse(iso)).find((entry) => entry.type === "day");
+  return Number(part?.value ?? "1");
+}
+
 function nyToIso(
   year: number,
   month: number,
@@ -327,6 +349,19 @@ function sum(values: number[]): number {
   return values.reduce((acc, value) => acc + value, 0);
 }
 
+function dayRange(days: number): number[] {
+  return Array.from({ length: days }, (_, index) => index + 1);
+}
+
+// Split a total into unequal parts that still add up exactly.
+function unevenSplit(totalCents: number, count: number, rand: () => number): number[] {
+  const weights = Array.from({ length: count }, () => 0.7 + rand() * 0.6);
+  const weightSum = sum(weights);
+  const parts = weights.map((weight) => Math.round((totalCents * weight) / weightSum));
+  parts[0] += totalCents - sum(parts);
+  return parts;
+}
+
 function hasUser(card: Card): card is SeedCard {
   return card.userId !== null;
 }
@@ -357,12 +392,19 @@ function cardLimit(card: SeedCard): number {
   return card.limitCents;
 }
 
-// Per-month totals each card should land on, before real rows and floors are applied.
+// A daily-limit card can never carry a single charge above its limit.
+function maxCharge(card: SeedCard): number {
+  return card.limitType === "daily" ? cardLimit(card) : Number.POSITIVE_INFINITY;
+}
+
+// Per-month totals each card should land on, before real rows and floors are
+// applied. A fixed limit is a lifetime budget: its months sum to the budget and
+// only weight how it is spread.
 function desiredTotals(card: SeedCard, rand: () => number): number[] {
   const limit = cardLimit(card);
   switch (card.holderName) {
     case HOLDER.claire:
-      return MONTHS.map(() => Math.round(limit * (0.12 + rand() * 0.08)));
+      return unevenSplit(Math.round(limit * (0.22 + rand() * 0.06)), MONTHS.length, rand);
     case HOLDER.emma:
       return MONTHS.map((_, index) =>
         Math.round(limit * (0.45 + index * 0.1 + (rand() - 0.5) * 0.03)),
@@ -374,13 +416,9 @@ function desiredTotals(card: SeedCard, rand: () => number): number[] {
     case "monthly":
       return MONTHS.map(() => Math.round(limit * (0.45 + rand() * 0.4)));
     case "daily":
-      return MONTHS.map(() => Math.round(limit * (40 + rand() * 30)));
-    case "fixed": {
-      const total = limit * (0.6 + rand() * 0.2);
-      const weights = MONTHS.map(() => 0.7 + rand() * 0.6);
-      const weightSum = sum(weights);
-      return weights.map((weight) => Math.round((total * weight) / weightSum));
-    }
+      return MONTHS.map(() => intBetween(rand, ...DAILY_MONTH_CENTS));
+    case "fixed":
+      return unevenSplit(Math.round(limit * (0.6 + rand() * 0.2)), MONTHS.length, rand);
     default:
       throw new Error(`no seed target for ${card.name} with limit type ${card.limitType}`);
   }
@@ -394,9 +432,9 @@ function recurringBaseCents(scale: number, rand: () => number): number {
   );
 }
 
-// Every card gets 2 to 4 recurring merchants with no merchant shared between cards,
-// apart from the planted duplicates. Allowlisted cards pick first so their small
-// inside pool is not consumed by unrestricted cards.
+// Every card gets 2 to 4 recurring merchants, each billed on its own day, with no
+// merchant shared between cards apart from the planted duplicates. Allowlisted
+// cards pick first so their small inside pool is not consumed by unrestricted cards.
 function assignRecurrences(
   plans: Omit<CardPlan, "recurrences">[],
   rand: () => number,
@@ -421,16 +459,17 @@ function assignRecurrences(
       throw new Error(`recurring merchant pool exhausted before ${card.name}`);
     }
     for (const merchant of picks) taken.add(merchant.raw);
+    const days = shuffle(dayRange(28), rand);
     assigned.set(card.id, [
-      ...planted.map((entry) => ({
+      ...planted.map((entry, index) => ({
         merchant: entry.merchant,
-        day: intBetween(rand, 1, 28),
+        day: days[index],
         baseCents: entry.cents,
         fixed: true,
       })),
-      ...picks.map((merchant) => ({
+      ...picks.map((merchant, index) => ({
         merchant,
-        day: intBetween(rand, 1, 28),
+        day: days[planted.length + index],
         baseCents: recurringBaseCents(scale, rand),
         fixed: false,
       })),
@@ -498,9 +537,24 @@ function recurringRows(plan: CardPlan, rand: () => number): Row[][] {
   );
 }
 
+// Days in a month with no charge on the card yet: real and planted rows sit in
+// the slot, recurring merchants have their fixed billing days.
+function freeDays(plan: CardPlan, month: SeedMonth, slot: Slot): number[] {
+  const taken = new Set([...slot.days, ...plan.recurrences.map((entry) => entry.day)]);
+  return dayRange(month.days).filter((day) => !taken.has(day));
+}
+
 // One-off drafts carry provisional amounts; fitOneoffs rescales them to the month's budget.
-function draftOneoffs(plan: CardPlan, rand: () => number): Row[][] {
+function draftOneoffs(
+  plan: CardPlan,
+  slots: Slot[],
+  bookedByMonth: number[],
+  rand: () => number,
+): Row[][] {
   if (isRestricted(plan.card)) return draftRestrictedOneoffs(plan, rand);
+  if (plan.card.limitType === "daily") {
+    return draftDailyOneoffs(plan, slots, bookedByMonth, rand);
+  }
   const factor = Math.max(1, Math.round(plan.scale / 800000));
   return MONTHS.map((month) => {
     const count = intBetween(rand, 8, 25) * factor;
@@ -510,34 +564,59 @@ function draftOneoffs(plan: CardPlan, rand: () => number): Row[][] {
   });
 }
 
-// Allowlisted cards: a fixed share of all charges (recurring included) leak to
-// software or rideshare merchants; everything else stays inside the allowlist.
+// Daily-limit cards: 6 to 10 charges a month, each on its own day and never above
+// the limit, so no day can exceed it. The count grows when the month's budget
+// cannot fit under the cap otherwise.
+function draftDailyOneoffs(
+  plan: CardPlan,
+  slots: Slot[],
+  bookedByMonth: number[],
+  rand: () => number,
+): Row[][] {
+  const { card } = plan;
+  const limit = cardLimit(card);
+  return MONTHS.map((month, index) => {
+    const fixedCount = plan.recurrences.length + slots[index].count;
+    const budget = plan.desired[index] - bookedByMonth[index];
+    const count = Math.max(
+      1,
+      intBetween(rand, ...DAILY_CHARGES) - fixedCount,
+      Math.ceil(budget / (limit * 0.9)),
+    );
+    const days = shuffle(freeDays(plan, month, slots[index]), rand).slice(0, count);
+    if (days.length < count) {
+      throw new Error(`not enough free days on ${card.name} in ${seedMonthKey(month)}`);
+    }
+    return days.map((day) =>
+      buildRow(card, pick(ONEOFF_POOL, rand), intBetween(rand, 10000, limit), month, day, rand),
+    );
+  });
+}
+
+// Allowlisted cards: the planted leaks are a fixed share of all charges
+// (recurring included); everything drafted here stays inside the allowlist.
 function draftRestrictedOneoffs(plan: CardPlan, rand: () => number): Row[][] {
   const { card } = plan;
-  const leakCount = intBetween(rand, 4, 6);
-  const totalCharges = Math.round(leakCount / LEAK_SHARE);
+  const totalCharges = Math.round(LEAK_COUNT / LEAK_SHARE);
   const insideCount = Math.max(
     0,
-    totalCharges - leakCount - plan.recurrences.length * MONTHS.length,
+    totalCharges - LEAK_COUNT - plan.recurrences.length * MONTHS.length,
   );
   const perMonth = MONTHS.map(() => Math.floor(insideCount / MONTHS.length));
   const extra = shuffle(MONTHS.map((_, index) => index), rand);
   for (const index of extra.slice(0, insideCount % MONTHS.length)) perMonth[index] += 1;
 
   const inside = insidePool(card, ONEOFF_POOL);
-  const months = MONTHS.map((month, index) =>
+  return MONTHS.map((month, index) =>
     Array.from({ length: perMonth[index] }, () => draftRow(card, pick(inside, rand), month, rand)),
   );
-  for (let leak = 0; leak < leakCount; leak += 1) {
-    const index = intBetween(rand, 0, MONTHS.length - 1);
-    months[index].push(draftRow(card, pick(LEAK_POOL, rand), MONTHS[index], rand));
-  }
-  return months;
 }
 
-// Final per-month totals: never below what is already booked, and for a ramping
-// card strictly above the previous month.
+// Final per-month totals: never below what is already booked, for a ramping card
+// strictly above the previous month, and for a fixed-limit card summing exactly
+// to its lifetime budget.
 function resolveTotals(plan: CardPlan, floors: number[]): number[] {
+  if (plan.card.limitType === "fixed") return lifetimeTotals(plan, floors);
   const rising = plan.card.holderName === HOLDER.emma;
   const step = Math.round(cardLimit(plan.card) * 0.01);
   const totals: number[] = [];
@@ -549,17 +628,39 @@ function resolveTotals(plan: CardPlan, floors: number[]): number[] {
   return totals;
 }
 
-function fitToTotal(rows: Row[], targetCents: number): Row[] {
+// Spread the spare budget over the floors by the desired weights, so the card
+// lands on its budget wherever the planted charges fell.
+function lifetimeTotals(plan: CardPlan, floors: number[]): number[] {
+  const budget = sum(plan.desired);
+  const spare = budget - sum(floors);
+  if (spare < 0) {
+    throw new Error(
+      `${plan.card.name} has ${sum(floors)} cents booked against a ${budget} cent lifetime budget`,
+    );
+  }
+  const totals = floors.map(
+    (floor, index) => floor + Math.round((spare * plan.desired[index]) / budget),
+  );
+  totals[0] += budget - sum(totals);
+  return totals;
+}
+
+function fitToTotal(rows: Row[], targetCents: number, maxCents: number): Row[] {
   const total = rows.reduce((sum, row) => sum + row.amountCents, 0);
   const scaled = rows.map((row) =>
-    Math.max(MIN_ONEOFF_CENTS, Math.round((row.amountCents * targetCents) / total)),
+    Math.min(
+      maxCents,
+      Math.max(MIN_ONEOFF_CENTS, Math.round((row.amountCents * targetCents) / total)),
+    ),
   );
   const order = [...scaled.keys()].sort((left, right) => scaled[right] - scaled[left]);
   let remainder = targetCents - scaled.reduce((sum, value) => sum + value, 0);
   for (const index of order) {
     if (remainder === 0) break;
     const step =
-      remainder > 0 ? remainder : Math.max(remainder, MIN_ONEOFF_CENTS - scaled[index]);
+      remainder > 0
+        ? Math.min(remainder, maxCents - scaled[index])
+        : Math.max(remainder, MIN_ONEOFF_CENTS - scaled[index]);
     scaled[index] += step;
     remainder -= step;
   }
@@ -568,14 +669,14 @@ function fitToTotal(rows: Row[], targetCents: number): Row[] {
 
 // When a month's budget is too small for the drafted rows (a real row already
 // fills the month), keep fewer one-offs rather than crushing every amount to $4.
-function fitOneoffs(rows: Row[], budgetCents: number): Row[] {
+function fitOneoffs(rows: Row[], budgetCents: number, maxCents: number): Row[] {
   if (rows.length === 0) return [];
   const keep = Math.max(
     1,
     Math.min(rows.length, Math.floor(budgetCents / MIN_ONEOFF_AVG_CENTS)),
   );
   const kept = rows.slice(0, keep);
-  return fitToTotal(kept, Math.max(budgetCents, keep * MIN_ONEOFF_CENTS));
+  return fitToTotal(kept, Math.max(budgetCents, keep * MIN_ONEOFF_CENTS), maxCents);
 }
 
 function monthKey(postedAt: string): string {
@@ -628,24 +729,24 @@ function main(): void {
     .filter((txn) => !txn.id.startsWith(GENERATED_ID_PREFIX));
 
   const seedCards = cards.filter(hasUser);
-  const cardFor = (holder: string): SeedCard => {
-    const card = seedCards.find((entry) => entry.holderName === holder);
-    if (card === undefined) throw new Error(`no card held by ${holder} in data/cards.json`);
-    return card;
-  };
-  const bigTicketCard = cardFor(HOLDER.hannah);
-  const gamblingCards = [cardFor(HOLDER.lucas), cardFor(HOLDER.lucas), cardFor(HOLDER.claire)];
-  const personalCard = cardFor(HOLDER.ethan);
-  const liquorCard = cardFor(HOLDER.sofia);
 
-  // Amounts already on each card-month before one-offs are fitted.
-  const booked = new Map<string, number>();
-  const book = (cardId: string, key: string, cents: number): void => {
-    const slot = `${cardId}|${key}`;
-    booked.set(slot, (booked.get(slot) ?? 0) + cents);
+  const slots = new Map<string, Slot>();
+  const slotFor = (cardId: string, key: string): Slot => {
+    const id = `${cardId}|${key}`;
+    const slot = slots.get(id) ?? { cents: 0, count: 0, days: new Set<number>() };
+    slots.set(id, slot);
+    return slot;
+  };
+  const book = (cardId: string, key: string, cents: number, day: number): void => {
+    const slot = slotFor(cardId, key);
+    slot.cents += cents;
+    slot.count += 1;
+    slot.days.add(day);
   };
   for (const txn of real) {
-    if (txn.cardId !== null) book(txn.cardId, monthKey(txn.postedAt), txn.amountCents);
+    if (txn.cardId !== null) {
+      book(txn.cardId, monthKey(txn.postedAt), txn.amountCents, nyDay(txn.postedAt));
+    }
   }
 
   const drafts = seedCards.map((card) => {
@@ -657,40 +758,65 @@ function main(): void {
     ...draft,
     recurrences: recurrences.get(draft.card.id) ?? [],
   }));
+  const planFor = (holder: string): CardPlan => {
+    const plan = plans.find((entry) => entry.card.holderName === holder);
+    if (plan === undefined) throw new Error(`no card held by ${holder} in data/cards.json`);
+    return plan;
+  };
+  const bigTicket = planFor(HOLDER.hannah);
+  const gambling = [planFor(HOLDER.lucas), planFor(HOLDER.lucas), planFor(HOLDER.lucas), planFor(HOLDER.claire)];
+  const personal = planFor(HOLDER.ethan);
+  const liquor = planFor(HOLDER.sofia);
+  const leaking = plans.filter((plan) => isRestricted(plan.card));
 
+  // Planted charges take a free day on daily-limit cards and never exceed the cap.
   const rows: Row[] = [];
-  const plant = (card: SeedCard, merchant: SeedMerchant, cents: number, month: SeedMonth): void => {
-    const row = buildRow(card, merchant, cents, month, intBetween(rand, 1, month.days), rand);
-    book(card.id, seedMonthKey(month), cents);
-    rows.push(row);
+  const plant = (plan: CardPlan, merchant: SeedMerchant, cents: number, month: SeedMonth): void => {
+    const { card } = plan;
+    const slot = slotFor(card.id, seedMonthKey(month));
+    const day =
+      card.limitType === "daily"
+        ? pick(freeDays(plan, month, slot), rand)
+        : intBetween(rand, 1, month.days);
+    const amount = Math.min(cents, maxCharge(card));
+    rows.push(buildRow(card, merchant, amount, month, day, rand));
+    book(card.id, seedMonthKey(month), amount, day);
   };
 
-  plant(bigTicketCard, CONFERENCE_MERCHANT, 185000, MONTHS[intBetween(rand, 0, 2)]);
-  plant(bigTicketCard, ELECTRONICS_MERCHANT, 240000, MONTHS[intBetween(rand, 3, 5)]);
-  for (const card of gamblingCards) {
-    plant(card, GAMBLING_MERCHANT, intBetween(rand, 5000, 20000), pick(MONTHS, rand));
+  plant(bigTicket, CONFERENCE_MERCHANT, 185000, MONTHS[intBetween(rand, 0, 2)]);
+  plant(bigTicket, ELECTRONICS_MERCHANT, 240000, MONTHS[intBetween(rand, 3, 5)]);
+  for (const plan of gambling) {
+    plant(plan, GAMBLING_MERCHANT, intBetween(rand, ...GAMBLING_CENTS), pick(MONTHS, rand));
   }
-  plant(personalCard, PERSONAL_MERCHANT, intBetween(rand, 17500, 18500), pick(MONTHS, rand));
+  plant(personal, PERSONAL_MERCHANT, intBetween(rand, 17500, 18500), pick(MONTHS, rand));
   for (let index = 0; index < 2; index += 1) {
-    plant(liquorCard, pick(LIQUOR_POOL, rand), intBetween(rand, 3500, 12000), pick(MONTHS, rand));
+    plant(liquor, pick(LIQUOR_POOL, rand), intBetween(rand, ...LIQUOR_CENTS), pick(MONTHS, rand));
+  }
+  // Leaks land in distinct months so none of them swamps a small monthly budget.
+  for (const plan of leaking) {
+    const amounts = unevenSplit(intBetween(rand, ...LEAK_TOTAL_CENTS), LEAK_COUNT, rand);
+    const months = shuffle(MONTHS, rand);
+    amounts.forEach((cents, index) => {
+      plant(plan, pick(LEAK_POOL, rand), cents, months[index % MONTHS.length]);
+    });
   }
 
   for (const plan of plans) {
     const recurring = recurringRows(plan, rand);
-    const oneoffs = draftOneoffs(plan, rand);
-    const bookedByMonth = MONTHS.map(
-      (month, index) =>
-        (booked.get(`${plan.card.id}|${seedMonthKey(month)}`) ?? 0) +
-        sum(recurring[index].map((row) => row.amountCents)),
+    const monthSlots = MONTHS.map((month) => slotFor(plan.card.id, seedMonthKey(month)));
+    const bookedByMonth = monthSlots.map(
+      (slot, index) => slot.cents + sum(recurring[index].map((row) => row.amountCents)),
     );
+    const oneoffs = draftOneoffs(plan, monthSlots, bookedByMonth, rand);
     const floors = bookedByMonth.map(
       (cents, index) => cents + Math.min(oneoffs[index].length, 2) * MIN_ONEOFF_AVG_CENTS,
     );
     const totals = resolveTotals(plan, floors);
+    const cap = maxCharge(plan.card);
     MONTHS.forEach((_, index) => {
       rows.push(
         ...recurring[index],
-        ...fitOneoffs(oneoffs[index], totals[index] - bookedByMonth[index]),
+        ...fitOneoffs(oneoffs[index], totals[index] - bookedByMonth[index], cap),
       );
     });
   }
