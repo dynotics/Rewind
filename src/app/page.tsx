@@ -190,6 +190,7 @@ function Rewind() {
               onOpen={setOpenTxnId}
               monthCount={replayed.months.length}
               scopeLabel={scopeLabel(policy, data.cards)}
+              noRule={policy === EMPTY_POLICY}
             />
             {policy === EMPTY_POLICY ? null : (
               <div className="lower">

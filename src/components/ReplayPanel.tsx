@@ -19,14 +19,15 @@ type Props = {
   onOpen: (txnId: string) => void;
   monthCount: number;
   scopeLabel: string;
+  noRule: boolean;
 };
 
 const FILTER_LABEL: Record<Filter, string> = {
   all: "",
   block: "blocked",
-  flag: "flagged",
-  caught: "caught on purpose",
-  wrong: "wrongly blocked",
+  flag: "flagged for review",
+  caught: "blocked on purpose",
+  wrong: "blocked by mistake",
 };
 
 function PlayRing({ playback }: { playback: Playback }) {
@@ -97,6 +98,7 @@ export function ReplayPanel(props: Props) {
         total={props.verdicts.length}
         filter={filter}
         onFilter={props.onFilter}
+        noRule={props.noRule}
       />
 
       <div className="ledger-bar">

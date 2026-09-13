@@ -7,20 +7,21 @@ type Props = {
   total: number;
   filter: Filter;
   onFilter: (filter: Filter) => void;
+  noRule: boolean;
 };
 
 const ROWS: { key: Exclude<Filter, "all">; label: string; tone: string }[] = [
   { key: "block", label: "Blocked", tone: "block" },
-  { key: "caught", label: "Caught on purpose", tone: "pass" },
-  { key: "flag", label: "Flagged", tone: "flag" },
-  { key: "wrong", label: "Blocked by new rule", tone: "dim" },
+  { key: "caught", label: "Blocked on purpose", tone: "pass" },
+  { key: "flag", label: "Flagged for review", tone: "flag" },
+  { key: "wrong", label: "Blocked by mistake", tone: "dim" },
 ];
 
 function figure(total: Total): string {
   return total.count === 0 ? "0" : `${total.count}, ${dollars(total.cents)}`;
 }
 
-export function ReplayStats({ tally, revealed, total, filter, onFilter }: Props) {
+export function ReplayStats({ tally, revealed, total, filter, onFilter, noRule }: Props) {
   return (
     <div className="stats">
       <div className="stat">
@@ -37,19 +38,23 @@ export function ReplayStats({ tally, revealed, total, filter, onFilter }: Props)
           Clear filter ×
         </button>
       </div>
-      {ROWS.map((row) => (
-        <button
-          key={row.key}
-          type="button"
-          className={`stat ${filter === row.key ? "on" : ""}`}
-          aria-pressed={filter === row.key}
-          title={filter === row.key ? "Show all" : `Show only ${row.label.toLowerCase()}`}
-          onClick={() => onFilter(filter === row.key ? "all" : row.key)}
-        >
-          <span>{row.label}</span>
-          <span className={`num ${row.tone}`}>{figure(tally[row.key])}</span>
-        </button>
-      ))}
+      {noRule ? (
+        <p className="empty">Pick a finding on the left to test its rule against these {total} transactions.</p>
+      ) : (
+        ROWS.map((row) => (
+          <button
+            key={row.key}
+            type="button"
+            className={`stat ${filter === row.key ? "on" : ""}`}
+            aria-pressed={filter === row.key}
+            title={filter === row.key ? "Show all" : `Show only ${row.label.toLowerCase()}`}
+            onClick={() => onFilter(filter === row.key ? "all" : row.key)}
+          >
+            <span>{row.label}</span>
+            <span className={`num ${row.tone}`}>{figure(tally[row.key])}</span>
+          </button>
+        ))
+      )}
     </div>
   );
 }

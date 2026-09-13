@@ -121,13 +121,14 @@ select {
   height: 15px;
 }
 
-.collapse {
+.side-toggle {
   color: var(--text-3);
   padding: 4px;
   border-radius: 4px;
+  flex-shrink: 0;
 }
 
-.collapse:hover {
+.side-toggle:hover {
   color: var(--text);
 }
 

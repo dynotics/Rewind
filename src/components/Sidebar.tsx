@@ -53,12 +53,12 @@ function Brand({ onCollapse, collapsed }: Pick<Props, "onCollapse" | "collapsed"
   return (
     <div className="brand">
       <div className="mark">
-        <Image className="eye" src="/rewind-eye.png" alt="" width={169} height={96} priority />
-        <Image className="word" src="/rewind-word.png" alt="Rewind" width={268} height={64} priority />
+        <Image className="eye" src="/rewind-eye.png" alt="" width={333} height={192} priority />
+        <Image className="word" src="/rewind-word.png" alt="Rewind" width={544} height={128} priority />
       </div>
       <button
         type="button"
-        className="collapse"
+        className="side-toggle"
         onClick={onCollapse}
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       >

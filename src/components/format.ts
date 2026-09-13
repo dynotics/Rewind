@@ -47,12 +47,12 @@ const MONTH_NAMES = [
 ];
 
 export const KIND_LABEL: Record<Finding["kind"], string> = {
-  duplicate_subscription: "Duplicate subscription",
-  control_leakage: "Control leakage",
-  risk_category: "Uncontrolled category",
-  no_limit: "No spending limit",
-  limit_too_high: "Limit far above reality",
-  spend_acceleration: "Spend acceleration",
+  duplicate_subscription: "Same vendor on two cards",
+  control_leakage: "Card allows spending it shouldn't",
+  risk_category: "Category nobody blocked",
+  no_limit: "No spending limit set",
+  limit_too_high: "Limit set far above actual spend",
+  spend_acceleration: "Spending climbing month over month",
 };
 
 export function money(cents: number): string {

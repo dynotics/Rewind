@@ -3,6 +3,12 @@ import type { Card, Finding, Merchant, Policy, Txn } from "./types";
 
 const RISK_MCCS = ["7995", "5921", "0742"];
 
+const RISK_CATEGORY_LABELS: Record<string, string> = {
+  "7995": "gambling",
+  "5921": "liquor store",
+  "0742": "veterinary",
+};
+
 function dollars(cents: number): string {
   return String(Math.round(cents / 100));
 }
@@ -196,11 +202,22 @@ function riskCategory(
       return `${name} $${dollars(sum(group.map((txn) => txn.amountCents)))}`;
     })
     .join(", ");
+  const categories = [...new Set(
+    [...byMcc].map(
+      ([mcc, group]) => RISK_CATEGORY_LABELS[mcc] ?? merchants[group[0].merchant].mccName.toLowerCase(),
+    ),
+  )];
+  const categoryPhrase =
+    categories.length <= 1
+      ? categories[0]
+      : categories.length === 2
+        ? categories.join(" and ")
+        : `${categories.slice(0, -1).join(", ")}, and ${categories[categories.length - 1]}`;
 
   return {
     id: `risk_category:${card.id}`,
     kind: "risk_category",
-    title: `${card.name} has ${risky.length} ${risky.length === 1 ? "charge" : "charges"} in blocked-worthy categories`,
+    title: `${card.name} has ${risky.length} ${categoryPhrase} ${risky.length === 1 ? "charge" : "charges"} on a card with no category blocks`,
     detail,
     cardId: card.id,
     evidenceTxnIds: risky.map((txn) => txn.id),

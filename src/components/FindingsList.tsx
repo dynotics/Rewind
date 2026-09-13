@@ -16,7 +16,7 @@ export function FindingsList({ findings, selectedId, onSelect, cardCount, txnCou
     <>
       <div className="lead">
         <span className="amt num">{dollars(atStake)}</span>
-        <span className="what">at stake across {plural(findings.length, "problem")}</span>
+        <span className="what">across {plural(findings.length, "problem")}</span>
         <span className="sub">
           {plural(cardCount, "card")}, {plural(txnCount, "transaction")}
         </span>
