@@ -75,7 +75,7 @@ Offline, [`sync.ts`](scripts/sync.ts) pages through the sandbox with [`rho.ts`](
 - **Wrongly blocked charges.** `wronglyBlocked` in [`analysis.ts`](src/components/analysis.ts) marks a blocked charge as wrong when its merchant is a recurring vendor, or when a limit block hits an amount within 30 percent of the median of at least three charges to the same merchant by the same holder. `capToClear` computes the smallest monthly limit, rounded up to 50 dollars, that would let all of them through, and the panel offers it as a one-click edit.
 - **The change plan** in [`changePlan.ts`](src/lib/changePlan.ts) diffs the policy against each card in scope and emits `spending_limit`, `spending_limit_type`, and either `blocked_categories` and `blocked_merchants` or `allowed_categories` and `allowed_merchants`, depending on which mode the card is already in, with a card the policy already matches left out and the copy button serialising the payloads with their `card_id`.
 
-## Screens
+## Walkthrough
 
 | | |
 |---|---|
@@ -85,8 +85,6 @@ Offline, [`sync.ts`](scripts/sync.ts) pages through the sandbox with [`rho.ts`](
 | In this one the limit is edited down to 50 dollars. The lower left panel lists the recurring vendors the rule would decline, how many months each has billed, and the limit that would clear them all. | **Change plan.** The same rule in Rho's field names, with the card's current setting beside the proposed one, and Copy as JSON emitting one object per card. |
 | <img alt="Search suggestions" src="docs/images/search.png"> | <img alt="Cards view" src="docs/images/cards.png"> |
 | **Search.** Typing a token key opens its values with a count of matching charges, and the tokens narrow the ledger and combine with plain words. | The cards view shows all eight sandbox cards with their real Rho limits and controls, spend replayed so far, and a suggested monthly limit for each. |
-
-<img alt="Findings view at phone width" src="docs/images/mobile.png" width="320">
 
 ## Rules the replay follows
 
