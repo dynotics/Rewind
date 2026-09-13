@@ -106,14 +106,14 @@ export function wronglyBlocked(
   const results: WrongBlock[] = [];
 
   for (const verdict of verdicts) {
-    if (!isLimitBlock(verdict)) continue;
+    if (verdict.outcome !== "block") continue;
+    const recurring = merchants[verdict.txn.merchant]?.isRecurring === true;
     const peers = peersOf(verdict.txn, txns, merchants);
     const usual = median(peers.map((txn) => txn.amountCents));
-    const recurring = merchants[verdict.txn.merchant]?.isRecurring === true;
     const near =
       peers.length >= USUAL_MIN_CHARGES &&
       Math.abs(verdict.txn.amountCents - usual) <= usual * NEAR_MEDIAN;
-    if (!recurring && !near) continue;
+    if (!recurring && (!isLimitBlock(verdict) || !near)) continue;
     results.push({
       verdict,
       canonical: canonicalOf(verdict.txn, merchants),
