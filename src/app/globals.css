@@ -108,6 +108,16 @@ select {
   height: 22px;
 }
 
+.brand .eye {
+  width: auto;
+  height: 22px;
+}
+
+.brand .word {
+  width: auto;
+  height: 15px;
+}
+
 .collapse {
   color: var(--text-3);
   padding: 4px;
@@ -200,7 +210,7 @@ select {
   gap: 10px;
 }
 
-.app.collapsed .brand .mark span,
+.app.collapsed .brand .mark .word,
 .app.collapsed .org span,
 .app.collapsed .nav button span,
 .app.collapsed .nav .group,

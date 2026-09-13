@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export type View = "findings" | "rules" | "cards";
 
 export type SyncState =
@@ -51,12 +53,8 @@ function Brand({ onCollapse, collapsed }: Pick<Props, "onCollapse" | "collapsed"
   return (
     <div className="brand">
       <div className="mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-          <circle cx="12" cy="12" r="9" />
-          <path d="M12 7v5l-3 2" />
-          <path d="M4.5 9a8 8 0 0 1 2.2-3.3M3.2 12.8l1.3-3.8 3.8 1.3" />
-        </svg>
-        <span>Rewind</span>
+        <Image className="eye" src="/rewind-eye.png" alt="" width={169} height={96} priority />
+        <Image className="word" src="/rewind-word.png" alt="Rewind" width={268} height={64} priority />
       </div>
       <button
         type="button"
