@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="public/rewind-eye.png" alt="Rewind" width="120">
+
 <h1>Rewind</h1>
 
 <p>Replay a proposed Rho card rule against six months of card history before you turn it on.</p>
