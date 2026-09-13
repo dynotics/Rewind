@@ -1,12 +1,18 @@
+<div align="center">
+
+<img src="public/rewind-eye.png" width="96" alt="Rewind">
+
 # Rewind
 
 Replay a proposed Rho card rule against six months of card history before you turn it on.
 
-Live app: https://rewind-dynotix.vercel.app
+<br>
 
-Source: https://github.com/dynotics/rewind
+Live app: https://rewind-dynotix.vercel.app<br>
+Source: https://github.com/dynotics/rewind<br>
+Built at LOCK IN Hack 2026 at Rho
 
-Built at LOCK IN Hack 2026 at Rho.
+</div>
 
 ## Why this exists
 
