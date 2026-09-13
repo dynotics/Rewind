@@ -232,6 +232,10 @@ select {
   padding: 12px 24px;
   border-bottom: 1px solid var(--line);
   background: var(--surface);
+  /* The token menu hangs below the header; keep it above the body but under the drawer. */
+  position: relative;
+  z-index: 10;
+  overflow: visible;
 }
 
 .top h1 {
@@ -272,8 +276,17 @@ select {
   white-space: nowrap;
 }
 
-.top .search {
+.top .tools {
   margin-left: auto;
+  min-width: 280px;
+  overflow: visible;
+}
+
+.top .search {
+  position: relative;
+}
+
+.top .search .field {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -282,14 +295,76 @@ select {
   border-radius: 6px;
   background: var(--canvas);
   color: var(--text-3);
-  min-width: 280px;
+}
+
+.top .search:focus-within .field {
+  border-color: var(--line-hover);
 }
 
 .top .search input {
   flex: 1;
+  min-width: 0;
   background: none;
   border: 0;
   outline: 0;
+}
+
+.top .menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 4px;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: 0 10px 24px rgba(6, 10, 18, 0.45);
+}
+
+.top .menu .menu-head {
+  padding: 5px 8px 6px;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.top .menu .menu-head b {
+  font: 12px var(--mono);
+  color: var(--text-2);
+}
+
+.top .menu li[role="option"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  color: var(--text-2);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.top .menu li.on {
+  background: var(--raised);
+  color: var(--text);
+}
+
+.top .menu li .num {
+  color: var(--text-3);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.top .chips {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  margin-top: 6px;
+  margin-bottom: -4px;
 }
 
 .top .search kbd {
@@ -1496,7 +1571,7 @@ select {
     flex-wrap: wrap;
   }
 
-  .top .search {
+  .top .tools {
     min-width: 0;
   }
 }

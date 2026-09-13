@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { changePlan } from "../lib/changePlan";
 import { replay } from "../lib/engine";
-import type { Card, Merchant, Policy, Txn } from "../lib/types";
+import type { Card, Merchant, Policy } from "../lib/types";
 import {
   EMPTY_POLICY,
   capToClear,
@@ -14,6 +14,7 @@ import {
   wronglyBlocked,
   type Filter,
 } from "./analysis";
+import { matchesQuery, parseQuery } from "./query";
 import type { Dataset } from "./useDataset";
 import type { TxnContext } from "./TxnDrawer";
 
@@ -25,13 +26,6 @@ type Options = {
   filter: Filter;
   query: string;
 };
-
-function matchesQuery(txn: Txn, query: string, merchants: Record<string, Merchant>): boolean {
-  const needle = query.trim().toLowerCase();
-  if (needle === "") return true;
-  const haystack = [txn.merchant, merchants[txn.merchant]?.canonical, txn.userName, txn.cardName];
-  return haystack.some((value) => value?.toLowerCase().includes(needle));
-}
 
 export function scopeLabel(policy: Policy, cards: Card[]): string {
   if (policy.scope === "all" || policy.scopeIds.length === 0) return "all cards";
@@ -52,15 +46,17 @@ export function useReplay({ data, merchants, policy, progress, filter, query }: 
     [policy, data],
   );
   const raiseTo = useMemo(() => capToClear(wrong, data.txns, policy), [wrong, data, policy]);
+  // Parsed here rather than per row, and so a half-typed `above:` drops out before it can filter.
+  const parsed = useMemo(() => parseQuery(query), [query]);
 
   const candidates = useMemo(() => {
     const everyone = policy.scope === "all" || policy.scopeIds.length === 0;
     return verdicts
       .map((verdict, index) => ({ verdict, index }))
       .filter(({ verdict }) => everyone || inScope(verdict.txn, policy))
-      .filter(({ verdict }) => matchesQuery(verdict.txn, query, merchants))
+      .filter(({ verdict }) => matchesQuery(parsed, verdict, merchants))
       .filter(({ verdict }) => matchesFilter(verdict, filter, wrongIds));
-  }, [verdicts, policy, query, merchants, filter, wrongIds]);
+  }, [verdicts, policy, parsed, merchants, filter, wrongIds]);
 
   const revealed = Math.floor(progress * verdicts.length);
   const rows = filter === "all" ? candidates : candidates.filter((row) => row.index < revealed);

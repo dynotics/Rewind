@@ -54,6 +54,7 @@ function Chip({ token, text, onRemove }: { token: Token; text: string; onRemove:
 
 export function SearchBox({ query, onQuery, suggestions }: Props) {
   const input = useRef<HTMLInputElement>(null);
+  const box = useRef<HTMLDivElement>(null);
   const pendingCaret = useRef<number | null>(null);
   const [caret, setCaret] = useState(0);
   const [open, setOpen] = useState(false);
@@ -126,7 +127,7 @@ export function SearchBox({ query, onQuery, suggestions }: Props) {
 
   return (
     <div className="tools">
-      <div className="search">
+      <div className="search" ref={box}>
         {/* A label so a click anywhere in the box lands in the input, as it did before the menu. */}
         <label className="field">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
@@ -152,7 +153,12 @@ export function SearchBox({ query, onQuery, suggestions }: Props) {
               setOpen(true);
             }}
             onKeyUp={(event) => setCaret(event.currentTarget.selectionStart ?? 0)}
-            onBlur={() => setOpen(false)}
+            onBlur={(event) => {
+              // Clicking a suggestion moves focus out of the input for an instant. Closing on
+              // every blur unmounted the menu before the click could land on it.
+              if (box.current?.contains(event.relatedTarget) === true) return;
+              setOpen(false);
+            }}
             onKeyDown={onKeyDown}
             placeholder="Merchant, or above:500"
             aria-label="Search transactions"

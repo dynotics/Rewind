@@ -13,6 +13,7 @@ import { FindingsList } from "../components/FindingsList";
 import type { Option } from "../components/PolicyForm";
 import { ReplayPanel } from "../components/ReplayPanel";
 import { RulePanel } from "../components/RulePanel";
+import { tokenSuggestions } from "../components/query";
 import { Sidebar, type View } from "../components/Sidebar";
 import { TopBar } from "../components/TopBar";
 import { TxnDrawer } from "../components/TxnDrawer";
@@ -82,6 +83,7 @@ function Rewind() {
     playback.reset();
   };
   const { found, recommendations } = useInsights(scoped);
+  const suggestions = useMemo(() => tokenSuggestions(scoped.txns, merchants), [scoped]);
   const policy = rule.policy;
   const replayed = useReplay({ data: scoped, merchants, policy, progress: playback.progress, filter, query });
   const editPolicy = (next: Policy) => {
@@ -138,6 +140,7 @@ function Rewind() {
           txnCount={scoped.txns.length}
           query={query}
           onQuery={setQuery}
+          suggestions={suggestions}
         />
         <div className="body">
           <section className="col left">
