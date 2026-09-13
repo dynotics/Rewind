@@ -50,6 +50,9 @@ export const MerchantSchema = z.object({
   mccName: z.string(),
   isRecurring: z.boolean().optional(),
   confidence: z.number(),
+  domain: z.string().nullable().optional(),
+  listPriceCents: z.number().nullable().optional(),
+  priceUnit: z.enum(["seat", "month"]).nullable().optional(),
 });
 
 export type Merchant = z.infer<typeof MerchantSchema>;
