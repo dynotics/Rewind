@@ -1,6 +1,9 @@
 <div align="center">
 
-<img src="public/rewind-eye.png" width="96" alt="Rewind">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/rewind-eye.png">
+  <img alt="Rewind" src="public/rewind-eye-black.png" width="96">
+</picture>
 
 # Rewind
 
