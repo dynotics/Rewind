@@ -9,12 +9,11 @@ type Props = {
   range: MonthRange | null;
   onRange: (range: MonthRange) => void;
   txnCount: number;
-  query: string;
   onQuery: (query: string) => void;
   suggestions: Suggestions;
 };
 
-export function TopBar({ title, months, range, onRange, txnCount, query, onQuery, suggestions }: Props) {
+export function TopBar({ title, months, range, onRange, txnCount, onQuery, suggestions }: Props) {
   return (
     <header className="top">
       <h1>{title}</h1>
@@ -23,7 +22,7 @@ export function TopBar({ title, months, range, onRange, txnCount, query, onQuery
       ) : (
         <RangeControl months={months} range={range} onRange={onRange} txnCount={txnCount} />
       )}
-      <SearchBox query={query} onQuery={onQuery} suggestions={suggestions} />
+      <SearchBox onQuery={onQuery} suggestions={suggestions} />
       <a className="link" href="https://github.com/dynotics/rewind#readme">
         Help
       </a>

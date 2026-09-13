@@ -137,13 +137,6 @@ export function tokenWord(key: TokenKey, value: string): string {
   return `${key}:${/\s/.test(value) ? `"${value}"` : value}`;
 }
 
-export function removeWord(text: string, word: string): string {
-  return scanWords(text)
-    .filter((item) => item.text !== word)
-    .map((item) => item.text)
-    .join(" ");
-}
-
 function matchesToken(token: Token, verdict: Verdict, merchants: Record<string, Merchant>): boolean {
   const txn = verdict.txn;
   switch (token.key) {

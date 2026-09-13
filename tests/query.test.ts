@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   matchesQuery,
   parseQuery,
-  removeWord,
   scanWords,
   tokenSuggestions,
   tokenWord,
@@ -147,15 +146,10 @@ describe("matchesQuery", () => {
   });
 });
 
-describe("tokenWord and removeWord", () => {
+describe("tokenWord", () => {
   it("quotes a value that carries a space", () => {
     expect(tokenWord("card", "maya chen")).toBe('card:"maya chen"');
     expect(tokenWord("mcc", "7995")).toBe("mcc:7995");
-  });
-
-  it("takes one token back out of the query", () => {
-    expect(removeWord("above:500 latte is:blocked", "is:blocked")).toBe("above:500 latte");
-    expect(removeWord('card:"maya chen" latte', 'card:"maya chen"')).toBe("latte");
   });
 });
 

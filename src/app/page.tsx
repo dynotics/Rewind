@@ -138,7 +138,6 @@ function Rewind() {
           range={range}
           onRange={pickRange}
           txnCount={scoped.txns.length}
-          query={query}
           onQuery={setQuery}
           suggestions={suggestions}
         />

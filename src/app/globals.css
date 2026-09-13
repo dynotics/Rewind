@@ -305,6 +305,7 @@ select {
   border-radius: 6px;
   background: var(--canvas);
   color: var(--text-3);
+  cursor: text;
 }
 
 .top .search:focus-within .field {
@@ -313,7 +314,7 @@ select {
 
 .top .search input {
   flex: 1;
-  min-width: 0;
+  min-width: 70px;
   background: none;
   border: 0;
   outline: 0;
@@ -369,12 +370,37 @@ select {
   font-style: normal;
 }
 
-.top .chips {
+.top .search .entry {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.top .search .chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
   list-style: none;
-  margin-top: 6px;
-  margin-bottom: -4px;
+}
+
+.top .search .chip {
+  margin: 0;
+  padding: 1px 5px 1px 6px;
+  gap: 4px;
+  background: var(--surface);
+}
+
+.top .search .chip b {
+  font: 500 12px var(--mono);
+  color: var(--brass);
+}
+
+.top .search .chip span {
+  color: var(--text);
 }
 
 .top .search kbd {
