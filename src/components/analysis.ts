@@ -17,7 +17,7 @@ export const EMPTY_POLICY: Policy = {
   scopeIds: [],
 };
 
-export type Filter = "all" | "block" | "flag" | "caught" | "wrong";
+export type Filter = "all" | "block" | "flag" | "wrong";
 
 export type Total = { count: number; cents: number };
 
@@ -52,15 +52,6 @@ export function appliesToCard(card: Card, policy: Policy): boolean {
   if (policy.scope === "all") return true;
   if (policy.scope === "card") return policy.scopeIds.includes(card.id);
   return card.userId !== null && policy.scopeIds.includes(card.userId);
-}
-
-export function isCaught(verdict: Verdict): boolean {
-  return (
-    verdict.outcome === "block" &&
-    verdict.reasons.some(
-      (reason) => reason.includes("blocked") || reason.includes("allowlist"),
-    )
-  );
 }
 
 function isLimitBlock(verdict: Verdict): boolean {
@@ -129,7 +120,6 @@ export function tally(verdicts: Verdict[], wrongIds: Set<string>): Tally {
   const result: Tally = {
     block: { count: 0, cents: 0 },
     flag: { count: 0, cents: 0 },
-    caught: { count: 0, cents: 0 },
     wrong: { count: 0, cents: 0 },
   };
   const add = (key: keyof Tally, cents: number) => {
@@ -141,7 +131,6 @@ export function tally(verdicts: Verdict[], wrongIds: Set<string>): Tally {
     const cents = verdict.txn.amountCents;
     if (verdict.outcome === "block") add("block", cents);
     if (verdict.outcome === "flag") add("flag", cents);
-    if (isCaught(verdict)) add("caught", cents);
     if (wrongIds.has(verdict.txn.id)) add("wrong", cents);
   }
 
@@ -154,7 +143,6 @@ export function matchesFilter(
   wrongIds: Set<string>,
 ): boolean {
   if (filter === "all") return true;
-  if (filter === "caught") return isCaught(verdict);
   if (filter === "wrong") return wrongIds.has(verdict.txn.id);
   return verdict.outcome === filter;
 }

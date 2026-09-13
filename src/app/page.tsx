@@ -216,7 +216,7 @@ function Rewind() {
                   onRaise={(cents) => editPolicy({ ...policy, monthlyCapCents: cents })}
                   onOpen={setOpenTxnId}
                 />
-                <ChangePlan plan={replayed.plan} cards={data.cards} onViewCards={() => openView("cards")} />
+                <ChangePlan plan={replayed.plan} cards={data.cards} />
               </div>
             )}
           </section>

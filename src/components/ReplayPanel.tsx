@@ -26,7 +26,6 @@ const FILTER_LABEL: Record<Filter, string> = {
   all: "",
   block: "blocked",
   flag: "flagged for review",
-  caught: "blocked on purpose",
   wrong: "blocked by mistake",
 };
 

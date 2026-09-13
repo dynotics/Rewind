@@ -5,7 +5,6 @@ import type { Card } from "../lib/types";
 type Props = {
   plan: CardChange[];
   cards: Card[];
-  onViewCards: () => void;
 };
 
 type CopyState = "idle" | "copied" | "failed";
@@ -43,7 +42,7 @@ function PlanLine({ line }: { line: string }) {
   );
 }
 
-export function ChangePlan({ plan, cards, onViewCards }: Props) {
+export function ChangePlan({ plan, cards }: Props) {
   const [copy, setCopy] = useState<CopyState>("idle");
 
   const copyJson = () => {
@@ -78,9 +77,6 @@ export function ChangePlan({ plan, cards, onViewCards }: Props) {
       <div className="acts">
         <button type="button" className="btn primary" onClick={copyJson} disabled={plan.length === 0}>
           {copy === "copied" ? "Copied" : copy === "failed" ? "Copy failed" : "Copy as JSON"}
-        </button>
-        <button type="button" className="btn" onClick={onViewCards}>
-          View cards
         </button>
       </div>
     </div>

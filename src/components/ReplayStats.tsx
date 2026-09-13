@@ -12,7 +12,6 @@ type Props = {
 
 const ROWS: { key: Exclude<Filter, "all">; label: string; tone: string }[] = [
   { key: "block", label: "Blocked", tone: "block" },
-  { key: "caught", label: "Blocked on purpose", tone: "pass" },
   { key: "flag", label: "Flagged for review", tone: "flag" },
   { key: "wrong", label: "Blocked by mistake", tone: "dim" },
 ];
