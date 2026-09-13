@@ -24,6 +24,14 @@ type Props = {
   onClose: () => void;
 };
 
+// Written onto merchants.json by `npm run enrich`; optional until that run lands.
+type VendorEnrichment = {
+  domain?: string;
+  listPriceCents?: number;
+  listPriceUnit?: string;
+  resolvedFrom?: string;
+};
+
 const OUTCOME_LABEL: Record<Verdict["outcome"], string> = { pass: "Passed", flag: "Flagged", block: "Blocked" };
 
 function Why({ context }: { context: TxnContext }) {
@@ -78,6 +86,57 @@ function MonthMeter({ verdict, policy }: { verdict: Verdict; policy: Policy }) {
   );
 }
 
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
+function Vendor({ merchant }: { merchant: Merchant | undefined }) {
+  const vendor = (merchant ?? {}) as VendorEnrichment;
+  const pending = <span className="pending">Pending enrichment</span>;
+  const source =
+    vendor.resolvedFrom !== undefined ? (
+      <a href={vendor.resolvedFrom} target="_blank" rel="noreferrer">
+        {hostOf(vendor.resolvedFrom)}
+      </a>
+    ) : merchant === undefined ? (
+      "Not mapped"
+    ) : (
+      `Seed catalog, ${Math.round(merchant.confidence * 100)}% confidence`
+    );
+
+  return (
+    <>
+      <dt>Domain</dt>
+      <dd>
+        {vendor.domain === undefined ? (
+          pending
+        ) : (
+          <a href={`https://${vendor.domain}`} target="_blank" rel="noreferrer">
+            {vendor.domain}
+          </a>
+        )}
+      </dd>
+      <dt>List price</dt>
+      <dd>
+        {vendor.listPriceCents === undefined ? (
+          pending
+        ) : (
+          <>
+            <span className="num">{money(vendor.listPriceCents)}</span>
+            {vendor.listPriceUnit === undefined ? "" : ` ${vendor.listPriceUnit}`}
+          </>
+        )}
+      </dd>
+      <dt>Resolved from</dt>
+      <dd>{source}</dd>
+    </>
+  );
+}
+
 function Details({ context, policy }: { context: TxnContext; policy: Policy }) {
   const { verdict, card, merchant } = context;
   return (
@@ -92,6 +151,7 @@ function Details({ context, policy }: { context: TxnContext; policy: Policy }) {
       <dd className="num">{card === undefined ? "Unknown" : limitLabel(card)}</dd>
       <dt>Category</dt>
       <dd>{merchant === undefined ? "Not mapped" : `MCC ${merchant.mcc} ${merchant.mccName}`}</dd>
+      <Vendor merchant={merchant} />
       <dt>History here</dt>
       <dd>
         {plural(context.peerCount, "charge")} in {context.peerMonths} of {context.windowMonths} months

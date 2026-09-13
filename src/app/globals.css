@@ -451,6 +451,19 @@ select {
   color: var(--text);
 }
 
+.rule dd a {
+  color: var(--brass);
+}
+
+.rule dd a:hover {
+  color: var(--brass-hover);
+}
+
+.rule dd .pending {
+  color: var(--text-3);
+  font-style: italic;
+}
+
 .chip {
   display: inline-flex;
   align-items: center;
