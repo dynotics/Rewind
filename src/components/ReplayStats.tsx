@@ -28,6 +28,14 @@ export function ReplayStats({ tally, revealed, total, filter, onFilter }: Props)
         <span className="num dim">
           {revealed} of {total}
         </span>
+        <button
+          type="button"
+          className="clear"
+          hidden={filter === "all"}
+          onClick={() => onFilter("all")}
+        >
+          Clear filter ×
+        </button>
       </div>
       {ROWS.map((row) => (
         <button

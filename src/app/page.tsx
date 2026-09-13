@@ -18,7 +18,7 @@ import { TopBar } from "../components/TopBar";
 import { TxnDrawer } from "../components/TxnDrawer";
 import { useDataset, type Dataset } from "../components/useDataset";
 import { txnsInRange, useMonthRange, type MonthRange } from "../components/useMonthRange";
-import { usePlayback } from "../components/usePlayback";
+import { usePlayback, usePlaybackClock } from "../components/usePlayback";
 import { neighbourException, scopeLabel, txnContext, useReplay } from "../components/useReplay";
 
 const merchants = merchantsData as Record<string, Merchant>;
@@ -76,6 +76,7 @@ function Rewind() {
   });
   const { months, range, setRange } = useMonthRange(data.txns);
   const scoped = useMemo<Dataset>(() => ({ ...data, txns: txnsInRange(data.txns, range) }), [data, range]);
+  usePlaybackClock(playback, scoped.txns.length);
   const pickRange = (next: MonthRange) => {
     setRange(next);
     playback.reset();

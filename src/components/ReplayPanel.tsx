@@ -4,7 +4,7 @@ import { Ledger, type LedgerRow } from "./Ledger";
 import { ReplayStats } from "./ReplayStats";
 import { ReplayStrip } from "./ReplayStrip";
 import { plural } from "./format";
-import type { Playback } from "./usePlayback";
+import { SPEEDS, type Playback } from "./usePlayback";
 
 type Props = {
   verdicts: Verdict[];
@@ -53,6 +53,24 @@ function PlayRing({ playback }: { playback: Playback }) {
   );
 }
 
+function SpeedControl({ playback }: { playback: Playback }) {
+  return (
+    <div className="speed" role="group" aria-label="Playback speed">
+      {SPEEDS.map((speed) => (
+        <button
+          key={speed.label}
+          type="button"
+          className={speed === playback.speed ? "on" : ""}
+          aria-pressed={speed === playback.speed}
+          onClick={() => playback.setSpeed(speed)}
+        >
+          {speed.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function ReplayPanel(props: Props) {
   const { playback, filter, rows } = props;
   const shown = filter === "all" ? "" : `${FILTER_LABEL[filter]} `;
@@ -64,6 +82,7 @@ export function ReplayPanel(props: Props) {
         <span className="note">this rule against the last {plural(props.monthCount, "month")}</span>
         <div className="acts">
           <PlayRing playback={playback} />
+          <SpeedControl playback={playback} />
           <button type="button" className="btn" onClick={playback.skip} disabled={playback.progress >= 1}>
             Skip to end
           </button>
@@ -85,11 +104,6 @@ export function ReplayPanel(props: Props) {
           {rows.length} {shown}
           {rows.length === 1 ? "transaction" : "transactions"} on {props.scopeLabel}
         </span>
-        {filter === "all" ? null : (
-          <button type="button" onClick={() => props.onFilter("all")}>
-            Show all
-          </button>
-        )}
       </div>
 
       <Ledger
