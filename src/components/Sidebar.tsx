@@ -106,9 +106,9 @@ export function Sidebar(props: Props) {
         </button>
       </nav>
       <div className="foot">
-        {live ? "Settled card spend from Rho" : "6 months of settled card spend"}
+        {live ? "Settled card spend from Rho" : "Settled card spend, Mar to Aug 2026"}
         <br />
-        {props.syncedAt === null ? "Seeded sandbox history" : `Synced today, ${props.syncedAt}`}
+        {props.syncedAt === null ? "8 cards from the Rho sandbox" : `Synced today, ${props.syncedAt}`}
         {sync.status === "failed" ? <span className="err"><br />{sync.message}</span> : null}
       </div>
     </aside>

@@ -24,7 +24,7 @@ export function FindingsList({ findings, selectedId, onSelect, cardCount, txnCou
 
       <div className="findings">
         {findings.length === 0 ? (
-          <p className="empty">No problems found in this history.</p>
+          <p className="empty">No problems found.</p>
         ) : null}
         {findings.map((finding) => (
           <button

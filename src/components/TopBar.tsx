@@ -35,8 +35,8 @@ export function TopBar({ title, range, query, onQuery }: Props) {
           value={query}
           onChange={(event) => onQuery(event.target.value)}
           onKeyDown={(event) => event.key === "Escape" && onQuery("")}
-          placeholder="Search merchants"
-          aria-label="Search merchants"
+          placeholder="Filter by merchant"
+          aria-label="Filter by merchant"
         />
         <kbd>⌘K</kbd>
       </label>

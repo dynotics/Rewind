@@ -50,7 +50,7 @@ export function ChangePlan({ plan, cards, onViewCards }: Props) {
     <div className="plan">
       <h2>Settings to apply in Rho</h2>
       {plan.length === 0 ? (
-        <p className="empty">Nothing to change. This rule matches the current card settings.</p>
+        <p className="empty">No changes. Matches current card settings.</p>
       ) : null}
       {plan.map((change) => {
         const card = cards.find((item) => item.id === change.cardId);

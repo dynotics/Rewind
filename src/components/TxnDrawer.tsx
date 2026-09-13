@@ -40,7 +40,7 @@ function Why({ context }: { context: TxnContext }) {
     <div className={`why ${verdict.outcome === "pass" ? "" : verdict.outcome}`}>
       <h3>{heading}</h3>
       {verdict.reasons.length === 0 ? (
-        <p>{inScope ? "No limit or list in the rule stops this charge." : "The rule does not cover this card."}</p>
+        <p>{inScope ? "No limit or list applies." : "Not covered by this rule."}</p>
       ) : (
         <ul>
           {verdict.reasons.map((reason) => (
@@ -50,7 +50,7 @@ function Why({ context }: { context: TxnContext }) {
       )}
       {wrong === undefined ? null : (
         <p className="legit">
-          Looks legitimate: {wrong.canonical} appears in {wrong.months} of {wrong.windowMonths} months for this cardholder.
+          Looks legitimate: {wrong.canonical}, {wrong.months} of {wrong.windowMonths} months for this cardholder.
         </p>
       )}
     </div>

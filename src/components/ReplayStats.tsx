@@ -35,7 +35,7 @@ export function ReplayStats({ tally, revealed, total, filter, onFilter }: Props)
           type="button"
           className={`stat ${filter === row.key ? "on" : ""}`}
           aria-pressed={filter === row.key}
-          title={filter === row.key ? "Show every transaction" : `Show only ${row.label.toLowerCase()} rows`}
+          title={filter === row.key ? "Show all" : `Show only ${row.label.toLowerCase()}`}
           onClick={() => onFilter(filter === row.key ? "all" : row.key)}
         >
           <span>{row.label}</span>

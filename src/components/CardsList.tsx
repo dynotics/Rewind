@@ -141,7 +141,7 @@ export function CardsList({ cards, verdicts, revealed, months, recommendations, 
       <div className="lead">
         <span className="amt num">{dollars(totalSpent)}</span>
         <span className="what">spent across {plural(cards.length, "card")}</span>
-        <span className="sub">Figures follow the replay cursor. Pick a card to load a rule sized to its real spend.</span>
+        <span className="sub">As of replay cursor</span>
       </div>
       <div className="cards">
         {cards.map((card) => (

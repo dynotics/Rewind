@@ -28,9 +28,7 @@ export function FalsePositives({ rows, policy, raiseTo, onRaise, onOpen }: Props
     <div className="annoy">
       <h2>Legitimate charges this rule would block</h2>
       {rows.length === 0 ? (
-        <p className="empty">
-          None so far. Recurring bills and charges near a cardholder&apos;s usual amount all pass.
-        </p>
+        <p className="empty">No legitimate charges blocked yet.</p>
       ) : null}
       {rows.map(({ verdict, canonical, months, windowMonths }) => (
         <button
