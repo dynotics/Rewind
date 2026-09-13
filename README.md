@@ -1,31 +1,12 @@
-<div align="center">
+# Rewind
 
-<img src="public/rewind-eye.png" alt="Rewind" width="120">
+Replay a proposed Rho card rule against six months of card history before you turn it on.
 
-<h1>Rewind</h1>
+Live app: https://rewind-dynotix.vercel.app
 
-<p>Replay a proposed Rho card rule against six months of card history before you turn it on.</p>
+Source: https://github.com/dynotics/rewind
 
-<table>
-  <tr>
-    <td><a href="https://rewind-dynotix.vercel.app">Live app</a></td>
-    <td><a href="https://github.com/dynotics/rewind">GitHub repo</a></td>
-    <td>LOCK IN Hack 2026 at Rho</td>
-  </tr>
-</table>
-
-<p>
-  <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-000?labelColor=1B2A42&color=C8A64B&logo=nextdotjs&logoColor=white">
-  <img alt="TypeScript 5" src="https://img.shields.io/badge/TypeScript-5-000?labelColor=1B2A42&color=C8A64B&logo=typescript&logoColor=white">
-  <img alt="Tailwind CSS 4" src="https://img.shields.io/badge/Tailwind-4-000?labelColor=1B2A42&color=C8A64B&logo=tailwindcss&logoColor=white">
-  <img alt="Zod 4" src="https://img.shields.io/badge/Zod-4-000?labelColor=1B2A42&color=C8A64B&logo=zod&logoColor=white">
-  <img alt="Vitest 5" src="https://img.shields.io/badge/Vitest-5-000?labelColor=1B2A42&color=C8A64B&logo=vitest&logoColor=white">
-  <img alt="Vercel" src="https://img.shields.io/badge/Vercel-deployed-000?labelColor=1B2A42&color=C8A64B&logo=vercel&logoColor=white">
-  <img alt="Rho sandbox API" src="https://img.shields.io/badge/Rho-sandbox%20API-000?labelColor=1B2A42&color=C8A64B">
-  <img alt="Tavily" src="https://img.shields.io/badge/Tavily-search-000?labelColor=1B2A42&color=C8A64B">
-</p>
-
-</div>
+Built at LOCK IN Hack 2026 at Rho.
 
 ## Why this exists
 
@@ -37,34 +18,27 @@ Rewind pulls the cards and settled transactions from a Rho account, scans them f
 
 ## Data flow
 
-```mermaid
-flowchart TB
-  subgraph Offline
-    RC["Rho GET /cards"] --> Sync["scripts/sync.ts"]
-    RT["Rho GET /transactions"] --> Sync
-    Sync --> Cards[("data/cards.json")]
-    Sync --> Txns[("data/transactions.json")]
-    Cards --> Seed["scripts/seed.ts"]
-    Txns --> Seed
-    Seed --> Txns
-    Seed --> Merch[("data/merchants.json")]
-  end
-  subgraph Browser
-    Cards --> Find["findings.ts"]
-    Txns --> Find
-    Merch --> Find
-    Find --> F["Finding objects"]
-    F --> Form["Policy form"]
-    Form --> Eng["engine.replay"]
-    Txns --> Eng
-    Merch --> Eng
-    Eng --> V["Verdict objects"]
-    V --> Ledger
-    V --> Tiles["Stat tiles"]
-    V --> Wrong["Wrongly blocked"]
-    V --> Plan["Change plan"]
-  end
-  Lookup["api/lookup"] -.-> Tavily["Tavily search"]
+```
+Offline
+  Rho GET /cards ─┐
+  Rho GET /transactions ─┴─> scripts/sync.ts
+                               ├─> data/cards.json
+                               └─> data/transactions.json
+                                     │
+                               scripts/seed.ts (reads both)
+                               ├─> data/transactions.json (six months of history)
+                               └─> data/merchants.json
+
+Runtime, in the browser
+  data/cards.json + data/transactions.json + data/merchants.json
+    └─> findings.ts -> Finding objects
+          └─> Policy form -> engine.replay -> Verdict objects
+                                                ├─> Ledger
+                                                ├─> Stat tiles
+                                                ├─> Wrongly blocked
+                                                └─> Change plan
+
+  merchant descriptor -> api/lookup -> Tavily search
 ```
 
 Offline, [`sync.ts`](scripts/sync.ts) pages through the sandbox with [`rho.ts`](src/lib/rho.ts), maps the raw shapes in [`mapRho.ts`](src/lib/mapRho.ts), and writes the two JSON files. [`seed.ts`](scripts/seed.ts) then reads them back, generates history against the same cards, and writes the transactions and merchant catalog. In the browser, [`page.tsx`](src/app/page.tsx) imports the three JSON files directly, so the app runs with no backend. The Sync from Rho button in the sidebar swaps in live data through [`api/live`](src/app/api/live/route.ts), which proxies the same two Rho endpoints with the server's token. The [`api/lookup`](src/app/api/lookup/route.ts) route takes a merchant descriptor and returns the top three Tavily results for it.
@@ -77,16 +51,35 @@ Offline, [`sync.ts`](scripts/sync.ts) pages through the sandbox with [`rho.ts`](
 - **Wrongly blocked charges.** `wronglyBlocked` in [`analysis.ts`](src/components/analysis.ts) marks a blocked charge as wrong when its merchant is a recurring vendor, or when a limit block hits an amount within 30 percent of the median of at least three charges to the same merchant by the same holder. `capToClear` computes the smallest monthly limit, rounded up to 50 dollars, that would let all of them through, and the panel offers it as a one-click edit.
 - **The change plan** in [`changePlan.ts`](src/lib/changePlan.ts) diffs the policy against each card in scope and emits `spending_limit`, `spending_limit_type`, and either `blocked_categories` and `blocked_merchants` or `allowed_categories` and `allowed_merchants`, depending on which mode the card is already in, with a card the policy already matches left out and the copy button serialising the payloads with their `card_id`.
 
-## Walkthrough
+## Screens
 
-| | |
-|---|---|
-| <img alt="Findings view on load" src="docs/images/findings.png"> | <img alt="Replay of a rule" src="docs/images/replay.png"> |
-| **Findings.** Eight problems ranked by dollar impact, with the total at stake in the headline. The right side stays on the raw ledger until a finding is picked. | **Replay.** The rule proposed for the top finding, run to the end of the window, with the strip across the top marking every charge, the tiles counting outcomes, and the ledger showing each verdict with its reason. |
-| <img alt="Wrongly blocked charges" src="docs/images/false-positives.png"> | <img alt="Change plan panel" src="docs/images/change-plan.png"> |
-| In this one the limit is edited down to 50 dollars. The lower left panel lists the recurring vendors the rule would decline, how many months each has billed, and the limit that would clear them all. | **Change plan.** The same rule in Rho's field names, with the card's current setting beside the proposed one, and Copy as JSON emitting one object per card. |
-| <img alt="Search suggestions" src="docs/images/search.png"> | <img alt="Cards view" src="docs/images/cards.png"> |
-| **Search.** Typing a token key opens its values with a count of matching charges, and the tokens narrow the ledger and combine with plain words. | The cards view shows all eight sandbox cards with their real Rho limits and controls, spend replayed so far, and a suggested monthly limit for each. |
+![Findings view on load](docs/images/findings.png)
+
+Findings. Eight problems ranked by dollar impact, with the total at stake in the headline. The right side stays on the raw ledger until a finding is picked.
+
+![Replay of a rule](docs/images/replay.png)
+
+Replay. The rule proposed for the top finding, run to the end of the window, with the strip across the top marking every charge, the tiles counting outcomes, and the ledger showing each verdict with its reason.
+
+![Wrongly blocked charges](docs/images/false-positives.png)
+
+In this one the limit is edited down to 50 dollars. The lower left panel lists the recurring vendors the rule would decline, how many months each has billed, and the limit that would clear them all.
+
+![Change plan panel](docs/images/change-plan.png)
+
+Change plan. The same rule in Rho's field names, with the card's current setting beside the proposed one, and Copy as JSON emitting one object per card.
+
+![Search suggestions](docs/images/search.png)
+
+Search. Typing a token key opens its values with a count of matching charges, and the tokens narrow the ledger and combine with plain words.
+
+![Cards view](docs/images/cards.png)
+
+The cards view shows all eight sandbox cards with their real Rho limits and controls, spend replayed so far, and a suggested monthly limit for each.
+
+![Findings view at phone width](docs/images/mobile.png)
+
+The findings view at phone width.
 
 ## Rules the replay follows
 
