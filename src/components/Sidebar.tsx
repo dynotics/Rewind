@@ -105,12 +105,12 @@ export function Sidebar(props: Props) {
           <span>{syncLabel(sync, live)}</span>
         </button>
       </nav>
-      <div className="foot">
-        {live ? "Settled card spend from Rho" : "Settled card spend, Mar to Aug 2026"}
-        <br />
-        {props.syncedAt === null ? "8 cards from the Rho sandbox" : `Synced today, ${props.syncedAt}`}
-        {sync.status === "failed" ? <span className="err"><br />{sync.message}</span> : null}
-      </div>
+      {live || sync.status === "failed" ? (
+        <div className="foot">
+          {live ? <>Settled card spend from Rho<br />Synced today, {props.syncedAt}</> : null}
+          {sync.status === "failed" ? <span className="err">{live ? <br /> : null}{sync.message}</span> : null}
+        </div>
+      ) : null}
     </aside>
   );
 }
