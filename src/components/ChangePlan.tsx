@@ -22,14 +22,23 @@ function PlanLine({ line }: { line: string }) {
     const [from, to] = rest.split(" -> ");
     return (
       <div className="l">
-        {field}  <b>{from}</b>  to  <b>{to}</b>
+        <div className="k">{field}</div>
+        <div className="val">
+          from <b>{from}</b>
+        </div>
+        <div className="val">
+          to <b>{to}</b>
+        </div>
       </div>
     );
   }
   const verb = rest.startsWith("- ") ? "remove" : "add";
   return (
     <div className="l">
-      {field}  {verb} <b>{rest.slice(2)}</b>
+      <div className="k">{field}</div>
+      <div className="val">
+        {verb} <b>{rest.slice(2)}</b>
+      </div>
     </div>
   );
 }

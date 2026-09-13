@@ -174,16 +174,18 @@ export default function Home() {
               monthCount={replayed.months.length}
               scopeLabel={scopeLabel(policy, data.cards)}
             />
-            <div className="lower">
-              <FalsePositives
-                rows={replayed.wrongShown}
-                policy={policy}
-                raiseTo={replayed.raiseTo}
-                onRaise={(cents) => editPolicy({ ...policy, monthlyCapCents: cents })}
-                onOpen={setOpenTxnId}
-              />
-              <ChangePlan plan={replayed.plan} cards={data.cards} onViewCards={() => setView("cards")} />
-            </div>
+            {policy === EMPTY_POLICY ? null : (
+              <div className="lower">
+                <FalsePositives
+                  rows={replayed.wrongShown}
+                  policy={policy}
+                  raiseTo={replayed.raiseTo}
+                  onRaise={(cents) => editPolicy({ ...policy, monthlyCapCents: cents })}
+                  onOpen={setOpenTxnId}
+                />
+                <ChangePlan plan={replayed.plan} cards={data.cards} onViewCards={() => setView("cards")} />
+              </div>
+            )}
           </section>
         </div>
       </div>
