@@ -111,6 +111,9 @@ select {
 .brand .eye {
   width: auto;
   height: 22px;
+  /* PNG mark ships two-tone (white eye + brass clock); flatten to the
+     wordmark's white so the lockup reads as one colour. */
+  filter: brightness(0) invert(1);
 }
 
 .brand .word {
