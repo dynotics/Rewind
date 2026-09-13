@@ -57,7 +57,7 @@ export function ChangePlan({ plan, cards, onViewCards }: Props) {
 
   return (
     <div className="plan">
-      <h2>Settings to apply in Rho</h2>
+      <h2>Export Settings</h2>
       {plan.length === 0 ? (
         <p className="empty">No changes. Matches current card settings.</p>
       ) : null}

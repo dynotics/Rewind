@@ -21,6 +21,7 @@ import { useDataset, type Dataset } from "../components/useDataset";
 import { txnsInRange, useMonthRange, type MonthRange } from "../components/useMonthRange";
 import { usePlayback, usePlaybackClock } from "../components/usePlayback";
 import { neighbourException, scopeLabel, txnContext, useReplay } from "../components/useReplay";
+import { useRules, type Rule } from "../components/useRules";
 
 const merchants = merchantsData as Record<string, Merchant>;
 
@@ -38,16 +39,24 @@ const MERCHANT_OPTIONS: Option[] = [
 
 const TITLES: Record<View, string> = { findings: "Findings", rules: "Rules", cards: "Cards" };
 
-type Rule = { policy: Policy; origin: Policy | null; id: string | null };
-
-const NO_RULE: Rule = { policy: EMPTY_POLICY, origin: null, id: null };
-
 function ruleHeading(rule: Rule, found: Finding[], cards: Card[]): string {
   const cardName = (id: string | null) => cards.find((card) => card.id === id)?.name ?? "this card";
   if (rule.id?.startsWith("card:")) return `Suggested rule for ${cardName(rule.id.slice(5))}`;
   const finding = found.find((item) => item.id === rule.id);
   if (finding !== undefined) return `Proposed rule for ${cardName(finding.cardId)}`;
   return rule.policy === EMPTY_POLICY ? "No rule yet. Pick a finding or a card, or edit one." : "Custom rule";
+}
+
+function ruleSwitch(view: View, rules: ReturnType<typeof useRules>, found: Finding[], cards: Card[]) {
+  if (view === "rules") {
+    if (rules.custom.policy !== EMPTY_POLICY || rules.picked.id === null) return undefined;
+    const heading = ruleHeading(rules.picked, found, cards);
+    return { label: `Start from ${heading[0].toLowerCase()}${heading.slice(1)}`, onClick: rules.copyPicked };
+  }
+  if (rules.showing === "picked" && rules.custom.policy !== EMPTY_POLICY) {
+    return { label: "Show custom rule", onClick: () => rules.show("custom") };
+  }
+  return undefined;
 }
 
 function useInsights(data: Dataset) {
@@ -63,16 +72,17 @@ function Rewind() {
   const [filter, setFilter] = useState<Filter>("all");
   const [editing, setEditing] = useState(false);
   const [openTxnId, setOpenTxnId] = useState<string | null>(null);
-  const [rule, setRule] = useState<Rule>(NO_RULE);
   const playback = usePlayback();
-
-  const loadRule = (next: Rule) => {
-    setRule(next);
+  const rules = useRules(() => {
     setFilter("all");
     playback.reset();
-  };
+  });
+  const rule = rules.rule;
+
   const { data, sync, toggleSource } = useDataset(() => {
-    loadRule(NO_RULE);
+    rules.reset();
+    setFilter("all");
+    playback.reset();
     setOpenTxnId(null);
   });
   const { months, range, setRange } = useMonthRange(data.txns);
@@ -87,8 +97,12 @@ function Rewind() {
   const policy = rule.policy;
   const replayed = useReplay({ data: scoped, merchants, policy, progress: playback.progress, filter, query });
   const editPolicy = (next: Policy) => {
-    setRule((current) => ({ ...current, policy: next }));
+    rules.edit(next);
     playback.reset();
+  };
+  const openView = (next: View) => {
+    setView(next);
+    if (next === "rules") rules.show("custom");
   };
   const closeDrawer = useCallback(() => setOpenTxnId(null), []);
 
@@ -110,9 +124,10 @@ function Rewind() {
       onEditing={setEditing}
       onChange={editPolicy}
       onClear={() => {
-        loadRule(NO_RULE);
+        rules.clear();
         setEditing(false);
       }}
+      extra={ruleSwitch(view, rules, found, data.cards)}
       flush={view === "rules"}
     />
   );
@@ -121,7 +136,7 @@ function Rewind() {
     <div className={`app ${collapsed ? "collapsed" : ""}`}>
       <Sidebar
         view={view}
-        onView={setView}
+        onView={openView}
         collapsed={collapsed}
         onCollapse={() => setCollapsed((value) => !value)}
         findingsCount={found.length}
@@ -149,7 +164,7 @@ function Rewind() {
                   <FindingsList
                     findings={found}
                     selectedId={rule.id}
-                    onSelect={(finding) => loadRule({ policy: finding.suggested, origin: finding.suggested, id: finding.id })}
+                    onSelect={(finding) => rules.pick({ policy: finding.suggested, origin: finding.suggested, id: finding.id })}
                     cardCount={data.cards.length}
                     txnCount={scoped.txns.length}
                   />
@@ -168,7 +183,7 @@ function Rewind() {
                   selectedCardId={rule.id?.startsWith("card:") ? rule.id.slice(5) : null}
                   onSelect={(card) => {
                     const next = cardRule(card, recommendations.find((item) => item.cardId === card.id));
-                    loadRule({ policy: next, origin: next, id: `card:${card.id}` });
+                    rules.pick({ policy: next, origin: next, id: `card:${card.id}` });
                   }}
                 />
               ) : null}
@@ -201,7 +216,7 @@ function Rewind() {
                   onRaise={(cents) => editPolicy({ ...policy, monthlyCapCents: cents })}
                   onOpen={setOpenTxnId}
                 />
-                <ChangePlan plan={replayed.plan} cards={data.cards} onViewCards={() => setView("cards")} />
+                <ChangePlan plan={replayed.plan} cards={data.cards} onViewCards={() => openView("cards")} />
               </div>
             )}
           </section>

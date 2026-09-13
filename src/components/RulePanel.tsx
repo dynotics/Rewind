@@ -13,6 +13,7 @@ type Props = {
   onEditing: (editing: boolean) => void;
   onChange: (policy: Policy) => void;
   onClear: () => void;
+  extra?: { label: string; onClick: () => void };
   flush?: boolean;
 };
 
@@ -95,6 +96,11 @@ export function RulePanel(props: Props) {
         />
       ) : null}
       <div className="acts">
+        {props.extra === undefined ? null : (
+          <button type="button" className="btn" onClick={props.extra.onClick}>
+            {props.extra.label}
+          </button>
+        )}
         {props.flush ? null : (
           <button type="button" className="btn" onClick={() => onEditing(!editing)}>
             {editing ? "Done editing" : "Edit rule"}
