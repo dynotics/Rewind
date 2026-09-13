@@ -13,6 +13,7 @@ import {
   tally,
   wronglyBlocked,
   type Filter,
+  type Total,
 } from "./analysis";
 import { matchesQuery, parseQuery } from "./query";
 import type { Dataset } from "./useDataset";
@@ -41,6 +42,12 @@ export function useReplay({ data, merchants, policy, progress, filter, query }: 
   const indexById = useMemo(() => new Map(verdicts.map((verdict, index) => [verdict.txn.id, index])), [verdicts]);
   const wrong = useMemo(() => wronglyBlocked(verdicts, data.txns, merchants), [verdicts, data, merchants]);
   const wrongIds = useMemo(() => new Set(wrong.map((row) => row.verdict.txn.id)), [wrong]);
+  // Wrongly-blocked rows describe the rule itself, not the replay's progress, so they never
+  // wait on `revealed` the way the ledger feed does.
+  const wrongTotal = useMemo<Total>(
+    () => ({ count: wrong.length, cents: wrong.reduce((sum, row) => sum + row.verdict.txn.amountCents, 0) }),
+    [wrong],
+  );
   const plan = useMemo(
     () => (policy === EMPTY_POLICY ? [] : changePlan(policy, data.cards, data.txns)),
     [policy, data],
@@ -70,8 +77,8 @@ export function useReplay({ data, merchants, policy, progress, filter, query }: 
     plan,
     raiseTo,
     indexOf,
-    tally: tally(verdicts.slice(0, revealed), wrongIds),
-    wrongShown: wrong.filter((row) => (indexById.get(row.verdict.txn.id) ?? 0) < revealed),
+    tally: { ...tally(verdicts.slice(0, revealed), wrongIds), wrong: wrongTotal },
+    wrongShown: wrong,
     wrongFor: (txnId: string) => wrong.find((row) => row.verdict.txn.id === txnId),
   };
 }
