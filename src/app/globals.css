@@ -704,6 +704,7 @@ select {
 
 .seg {
   display: inline-flex;
+  justify-self: start;
   border: 1px solid var(--line);
   border-radius: 6px;
   overflow: hidden;

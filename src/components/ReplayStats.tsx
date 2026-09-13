@@ -13,7 +13,7 @@ const ROWS: { key: Exclude<Filter, "all">; label: string; tone: string }[] = [
   { key: "block", label: "Blocked", tone: "block" },
   { key: "caught", label: "Caught on purpose", tone: "pass" },
   { key: "flag", label: "Flagged", tone: "flag" },
-  { key: "wrong", label: "Wrongly blocked", tone: "dim" },
+  { key: "wrong", label: "Blocked by new rule", tone: "dim" },
 ];
 
 function figure(total: Total): string {

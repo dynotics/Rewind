@@ -26,9 +26,9 @@ function explain(rows: WrongBlock[], policy: Policy, raiseTo: number | null): st
 export function FalsePositives({ rows, policy, raiseTo, onRaise, onOpen }: Props) {
   return (
     <div className="annoy">
-      <h2>Legitimate charges this rule would block</h2>
+      <h2>Charges this rule would block</h2>
       {rows.length === 0 ? (
-        <p className="empty">No legitimate charges blocked yet.</p>
+        <p className="empty">No charges blocked yet.</p>
       ) : null}
       {rows.map(({ verdict, canonical, months, windowMonths }) => (
         <button
