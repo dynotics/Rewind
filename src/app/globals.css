@@ -240,9 +240,36 @@ select {
 }
 
 .top .range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 12px;
+  border-left: 1px solid var(--line);
   color: var(--text-3);
   font-size: 13px;
-  margin-left: 8px;
+}
+
+.top .range select {
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--canvas);
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.top .range select:hover {
+  border-color: var(--line-hover);
+}
+
+.top .range select:focus {
+  border-color: var(--brass);
+}
+
+.top .range .count {
+  padding-left: 4px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .top .search {
@@ -1409,6 +1436,10 @@ select {
   .annoy {
     border-right: 0;
     border-bottom: 1px solid var(--line);
+  }
+
+  .top {
+    flex-wrap: wrap;
   }
 
   .top .search {

@@ -1,13 +1,18 @@
 import { useEffect, useRef } from "react";
+import { RangeControl } from "./RangeControl";
+import type { MonthRange } from "./useMonthRange";
 
 type Props = {
   title: string;
-  range: string;
+  months: string[];
+  range: MonthRange | null;
+  onRange: (range: MonthRange) => void;
+  txnCount: number;
   query: string;
   onQuery: (query: string) => void;
 };
 
-export function TopBar({ title, range, query, onQuery }: Props) {
+export function TopBar({ title, months, range, onRange, txnCount, query, onQuery }: Props) {
   const input = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -24,7 +29,11 @@ export function TopBar({ title, range, query, onQuery }: Props) {
   return (
     <header className="top">
       <h1>{title}</h1>
-      <span className="range">{range}</span>
+      {range === null ? (
+        <span className="range">No history</span>
+      ) : (
+        <RangeControl months={months} range={range} onRange={onRange} txnCount={txnCount} />
+      )}
       <label className="search">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
           <circle cx="7" cy="7" r="4.5" />

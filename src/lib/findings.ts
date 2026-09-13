@@ -261,7 +261,7 @@ function fixedLimitTooHigh(
     id: `limit_too_high:${card.id}`,
     kind: "limit_too_high",
     title: `${card.name} limit is ${ratio}x actual spend`,
-    detail: `limit $${dollars(card.limitCents)}, six-month total $${dollars(total)}`,
+    detail: `limit $${dollars(card.limitCents)}, ${totals.length}-month total $${dollars(total)}`,
     cardId: card.id,
     evidenceTxnIds: cardTxns.map((txn) => txn.id),
     impactCents: card.limitCents - total,

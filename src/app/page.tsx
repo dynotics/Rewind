@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
 import merchantsData from "../../data/merchants.json";
 import { findings } from "../lib/findings";
 import { recommendedLimits } from "../lib/recommend";
@@ -10,7 +10,6 @@ import { CardsList } from "../components/CardsList";
 import { ChangePlan } from "../components/ChangePlan";
 import { FalsePositives } from "../components/FalsePositives";
 import { FindingsList } from "../components/FindingsList";
-import { rangeLabel } from "../components/format";
 import type { Option } from "../components/PolicyForm";
 import { ReplayPanel } from "../components/ReplayPanel";
 import { RulePanel } from "../components/RulePanel";
@@ -18,6 +17,7 @@ import { Sidebar, type View } from "../components/Sidebar";
 import { TopBar } from "../components/TopBar";
 import { TxnDrawer } from "../components/TxnDrawer";
 import { useDataset, type Dataset } from "../components/useDataset";
+import { txnsInRange, useMonthRange, type MonthRange } from "../components/useMonthRange";
 import { usePlayback } from "../components/usePlayback";
 import { neighbourException, scopeLabel, txnContext, useReplay } from "../components/useReplay";
 
@@ -55,7 +55,7 @@ function useInsights(data: Dataset) {
   return { found, recommendations };
 }
 
-export default function Home() {
+function Rewind() {
   const [view, setView] = useState<View>("findings");
   const [collapsed, setCollapsed] = useState(false);
   const [query, setQuery] = useState("");
@@ -74,9 +74,15 @@ export default function Home() {
     loadRule(NO_RULE);
     setOpenTxnId(null);
   });
-  const { found, recommendations } = useInsights(data);
+  const { months, range, setRange } = useMonthRange(data.txns);
+  const scoped = useMemo<Dataset>(() => ({ ...data, txns: txnsInRange(data.txns, range) }), [data, range]);
+  const pickRange = (next: MonthRange) => {
+    setRange(next);
+    playback.reset();
+  };
+  const { found, recommendations } = useInsights(scoped);
   const policy = rule.policy;
-  const replayed = useReplay({ data, merchants, policy, progress: playback.progress, filter, query });
+  const replayed = useReplay({ data: scoped, merchants, policy, progress: playback.progress, filter, query });
   const editPolicy = (next: Policy) => {
     setRule((current) => ({ ...current, policy: next }));
     playback.reset();
@@ -123,7 +129,15 @@ export default function Home() {
         onSync={toggleSource}
       />
       <div className="main">
-        <TopBar title={TITLES[view]} range={rangeLabel(replayed.months)} query={query} onQuery={setQuery} />
+        <TopBar
+          title={TITLES[view]}
+          months={months}
+          range={range}
+          onRange={pickRange}
+          txnCount={scoped.txns.length}
+          query={query}
+          onQuery={setQuery}
+        />
         <div className="body">
           <section className="col left">
             <div className="pad">
@@ -134,7 +148,7 @@ export default function Home() {
                     selectedId={rule.id}
                     onSelect={(finding) => loadRule({ policy: finding.suggested, origin: finding.suggested, id: finding.id })}
                     cardCount={data.cards.length}
-                    txnCount={data.txns.length}
+                    txnCount={scoped.txns.length}
                   />
                   {rulePanel}
                 </>
@@ -192,7 +206,7 @@ export default function Home() {
 
       {openIndex === null ? null : (
         <TxnDrawer
-          context={txnContext(openIndex, replayed, data, merchants, policy)}
+          context={txnContext(openIndex, replayed, scoped, merchants, policy)}
           policy={policy}
           onApply={editPolicy}
           onPrev={step(-1)}
@@ -201,5 +215,13 @@ export default function Home() {
         />
       )}
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense>
+      <Rewind />
+    </Suspense>
   );
 }
