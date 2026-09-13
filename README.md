@@ -25,36 +25,15 @@
 
 </div>
 
-## The problem
+## Why this exists
 
 Rho ships spending limits, merchant blocks, category blocks and merchant allowlists on every card, and enforces them at the register. A charge that trips a control is declined on the spot. The controls themselves are described in Rho's [Understanding Rho Card Controls](https://www.rho.co/help-center/cards/understanding-rho-card-controls) article.
 
-What Rho does not ship is any way to test a control before it goes live. Nothing tells an admin which cards are missing a control, which limit is four times what the card actually spends, or whether the new limit they are about to set will decline the Datadog invoice on the 24th. So limits get set by guessing and calibrated by watching people get declined. Rho's own help center carries an article titled [Why Was My Rho Card Declined?](https://www.rho.co/help-center/cards/why-was-my-rho-card-declined) for this reason.
+What Rho does not ship is any way to test a control before it goes live. Nothing tells an admin which cards are missing a control, or that a limit is four times what the card actually spends. The limit they are about to set might decline the Datadog invoice on the 24th. Nothing warns them. So limits get set by guessing and calibrated by watching people get declined. Rho's own help center carries an article titled [Why Was My Rho Card Declined?](https://www.rho.co/help-center/cards/why-was-my-rho-card-declined) for this reason.
 
 Rewind pulls the cards and settled transactions from a Rho account, scans them for problems, and lets you replay a candidate rule over the history to see exactly which past charges it would have blocked, which of those blocks would have been mistakes, and what to type into Rho to apply it.
 
-## See it live
-
-| | |
-|---|---|
-| <img alt="Findings view on load" src="docs/images/findings.png"> | <img alt="Replay of a rule" src="docs/images/replay.png"> |
-| **Findings.** Eight problems ranked by dollar impact, with the total at stake in the headline. The right side stays on the raw ledger until a finding is picked. | **Replay.** The rule proposed for the top finding, run to the end of the window. The strip across the top marks every charge, the tiles count outcomes, and the ledger shows each verdict with its reason. |
-| <img alt="Wrongly blocked charges" src="docs/images/false-positives.png"> | <img alt="Change plan panel" src="docs/images/change-plan.png"> |
-| **Wrongly blocked.** The limit edited down to 50 dollars. The lower left panel lists recurring vendors the rule would decline, how many months each has billed, and the limit that would clear them all. | **Change plan.** The same rule expressed in Rho's field names, with the card's current setting beside the proposed one. Copy as JSON emits one object per card. |
-| <img alt="Search suggestions" src="docs/images/search.png"> | <img alt="Cards view" src="docs/images/cards.png"> |
-| **Search.** Typing a token key opens its values with a count of matching charges. Tokens narrow the ledger and combine with plain words. | **Cards.** All eight sandbox cards with their real Rho limits and controls, spend replayed so far, and a suggested monthly limit for each. |
-
-<img alt="Findings view at phone width" src="docs/images/mobile.png" width="320">
-
-## What it does
-
-- **Six detectors scan the history for problems.** [`findings.ts`](src/lib/findings.ts) runs each card through five checks and the whole ledger through a sixth. A recurring merchant billed on two or more cards for at least four months each is a duplicate subscription. A card with an allowlist whose charges fall outside it is control leakage. Charges in MCC 7995, 5921 or 0742 on a card that does not block that code are a risk category. A card with no limit, a monthly limit above three times its 95th percentile month, or a fixed limit above twice its six month total is flagged, and a card whose last three months each rose above the one before is spend acceleration. Every finding carries a dollar impact and a suggested [`Policy`](src/lib/types.ts), and the list is sorted by impact.
-- **The replay engine runs a rule over every charge in posted order.** [`engine.ts`](src/lib/engine.ts) takes the transactions, a policy and the merchant catalog and returns one `Verdict` per charge: pass, flag or block, with the reasons that fired and the month's running total after the charge. The UI in [`useReplay.ts`](src/components/useReplay.ts) reveals verdicts progressively as the playback cursor advances, so the tiles and ledger fill in over time.
-- **Recommended limits come from the 95th percentile month.** [`recommend.ts`](src/lib/recommend.ts) buckets each card's charges by Eastern month, takes the 95th percentile of the monthly totals, adds 15 percent, and rounds up to the next 50 dollars. The same function proposes a per-charge threshold from the 95th percentile charge plus 25 percent. The findings use the same cap formula when they propose a limit.
-- **A panel separates blocks that were mistakes from blocks that were the point.** `wronglyBlocked` in [`analysis.ts`](src/components/analysis.ts) marks a blocked charge as wrong when its merchant is a recurring vendor, or when a limit block hits an amount within 30 percent of the median of at least three charges to the same merchant by the same holder. `capToClear` computes the smallest monthly limit, rounded up to 50 dollars, that would let all of them through, and the panel offers it as a one-click edit.
-- **The change plan speaks Rho's field names.** [`changePlan.ts`](src/lib/changePlan.ts) diffs the policy against each card in scope and emits `spending_limit`, `spending_limit_type`, and either `blocked_categories` and `blocked_merchants` or `allowed_categories` and `allowed_merchants`, depending on which mode the card is already in. A card the policy already matches is left out. The copy button serialises the payloads with their `card_id`.
-
-## How it works
+## Data flow
 
 ```mermaid
 flowchart TB
@@ -88,7 +67,28 @@ flowchart TB
 
 Offline, [`sync.ts`](scripts/sync.ts) pages through the sandbox with [`rho.ts`](src/lib/rho.ts), maps the raw shapes in [`mapRho.ts`](src/lib/mapRho.ts), and writes the two JSON files. [`seed.ts`](scripts/seed.ts) then reads them back, generates history against the same cards, and writes the transactions and merchant catalog. In the browser, [`page.tsx`](src/app/page.tsx) imports the three JSON files directly, so the app runs with no backend. The Sync from Rho button in the sidebar swaps in live data through [`api/live`](src/app/api/live/route.ts), which proxies the same two Rho endpoints with the server's token. The [`api/lookup`](src/app/api/lookup/route.ts) route takes a merchant descriptor and returns the top three Tavily results for it.
 
-## Engine semantics
+## The pieces
+
+- **Six detectors scan the history for problems.** [`findings.ts`](src/lib/findings.ts) runs each card through five checks and the whole ledger through a sixth. A recurring merchant billed on two or more cards for at least four months each is a duplicate subscription. A card with an allowlist whose charges fall outside it is control leakage. Charges in MCC 7995, 5921 or 0742 on a card that does not block that code are a risk category. A card with no limit, a monthly limit above three times its 95th percentile month, or a fixed limit above twice its six month total is flagged, and a card whose last three months each rose above the one before is spend acceleration. Every finding carries a dollar impact and a suggested [`Policy`](src/lib/types.ts), and the list is sorted by impact.
+- **One verdict per charge** comes out of [`engine.ts`](src/lib/engine.ts), which takes the transactions, a policy and the merchant catalog and returns a `Verdict` of pass, flag or block for each one in posted order, with the reasons that fired and the month's running total after the charge, and [`useReplay.ts`](src/components/useReplay.ts) reveals those verdicts as the playback cursor advances so the tiles and ledger fill in over time.
+- [`recommend.ts`](src/lib/recommend.ts) buckets each card's charges by Eastern month, takes the 95th percentile of the monthly totals, adds 15 percent, and rounds up to the next 50 dollars. The same function proposes a per-charge threshold from the 95th percentile charge plus 25 percent, which the replay flags but cannot block, because Rho exposes no per-charge control on a card. The findings use the same cap formula when they propose a limit.
+- **Wrongly blocked charges.** `wronglyBlocked` in [`analysis.ts`](src/components/analysis.ts) marks a blocked charge as wrong when its merchant is a recurring vendor, or when a limit block hits an amount within 30 percent of the median of at least three charges to the same merchant by the same holder. `capToClear` computes the smallest monthly limit, rounded up to 50 dollars, that would let all of them through, and the panel offers it as a one-click edit.
+- **The change plan** in [`changePlan.ts`](src/lib/changePlan.ts) diffs the policy against each card in scope and emits `spending_limit`, `spending_limit_type`, and either `blocked_categories` and `blocked_merchants` or `allowed_categories` and `allowed_merchants`, depending on which mode the card is already in, with a card the policy already matches left out and the copy button serialising the payloads with their `card_id`.
+
+## Screens
+
+| | |
+|---|---|
+| <img alt="Findings view on load" src="docs/images/findings.png"> | <img alt="Replay of a rule" src="docs/images/replay.png"> |
+| **Findings.** Eight problems ranked by dollar impact, with the total at stake in the headline. The right side stays on the raw ledger until a finding is picked. | **Replay.** The rule proposed for the top finding, run to the end of the window, with the strip across the top marking every charge, the tiles counting outcomes, and the ledger showing each verdict with its reason. |
+| <img alt="Wrongly blocked charges" src="docs/images/false-positives.png"> | <img alt="Change plan panel" src="docs/images/change-plan.png"> |
+| In this one the limit is edited down to 50 dollars. The lower left panel lists the recurring vendors the rule would decline, how many months each has billed, and the limit that would clear them all. | **Change plan.** The same rule in Rho's field names, with the card's current setting beside the proposed one, and Copy as JSON emitting one object per card. |
+| <img alt="Search suggestions" src="docs/images/search.png"> | <img alt="Cards view" src="docs/images/cards.png"> |
+| **Search.** Typing a token key opens its values with a count of matching charges, and the tokens narrow the ledger and combine with plain words. | The cards view shows all eight sandbox cards with their real Rho limits and controls, spend replayed so far, and a suggested monthly limit for each. |
+
+<img alt="Findings view at phone width" src="docs/images/mobile.png" width="320">
+
+## Rules the replay follows
 
 The rules in [`engine.ts`](src/lib/engine.ts), and why each one is there:
 
@@ -113,7 +113,7 @@ For lookups, [`merchantLexicon.ts`](src/lib/merchantLexicon.ts) normalizes a des
 
 An earlier version went further. [`resolveMerchants.ts`](src/lib/resolveMerchants.ts) searched Tavily for each merchant, scored the result text against keyword lists per MCC, and tried to scrape a list price from the vendor's pricing page. The classifications were wrong often enough that the approach was retired when the lookup route was added. The file is still in the tree, but nothing imports it, and the route returns search results without guessing a category from them.
 
-## Data
+## Where the data comes from
 
 All eight cards in [`data/cards.json`](data/cards.json) are real sandbox objects pulled by [`sync.ts`](scripts/sync.ts), with their actual limits and controls: Ethan Parker's card blocks veterinary services and Petco, Maya Thompson's is allowlisted to restaurants and Sweetgreen, Lucas Bennett's has a 750 dollar daily limit, Claire Mitchell's has a 5,000 dollar fixed limit, and Hannah Brooks's has a 25,000 dollar monthly one.
 
